@@ -474,25 +474,34 @@
     };
 
     function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'hi-IN'; 
-        u.pitch = 1.05; 
-        u.rate = 0.95; // Slightly slower for a calmer, human feel
-        
-        if (availableVoices.length === 0) {
-          availableVoices = window.speechSynthesis.getVoices();
+      return new Promise((resolve) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel(); 
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'hi-IN'; 
+          u.pitch = 1.05; 
+          u.rate = 0.95; 
+          
+          if (availableVoices.length === 0) {
+            availableVoices = window.speechSynthesis.getVoices();
+          }
+          
+          let bestVoice = availableVoices.find(v => v.lang === 'hi-IN' && (v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium')));
+          if (!bestVoice) bestVoice = availableVoices.find(v => v.lang.includes('hi'));
+          
+          if (bestVoice) u.voice = bestVoice;
+          
+          u.onend = () => resolve();
+          u.onerror = () => resolve();
+
+          window.speechSynthesis.speak(u);
+          
+          // Fallback resolve if speech gets stuck
+          setTimeout(resolve, 5000);
+        } else {
+          resolve();
         }
-        
-        // Try to find the most premium, natural sounding Hindi voice available on the device
-        let bestVoice = availableVoices.find(v => v.lang === 'hi-IN' && (v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium')));
-        if (!bestVoice) bestVoice = availableVoices.find(v => v.lang.includes('hi'));
-        
-        if (bestVoice) u.voice = bestVoice;
-        
-        window.speechSynthesis.speak(u);
-      }
+      });
     }
 
     function showStep(step) {
@@ -530,12 +539,12 @@
     }
 
     function validatePO(fullPoString) {
-      if (validVendorPOs.length === 0) return true; // Skip validation if list couldn't be loaded
+      if (validVendorPOs.length === 0) return true; 
       return validVendorPOs.includes(fullPoString);
     }
 
     // Step 1: PO Voice
-    function startVoicePO() {
+    async function startVoicePO() {
       if (!speechRecog) return Swal.fire('Error', 'Voice input not supported. Please use text.', 'error');
       
       const icon = document.getElementById("icon-po");
@@ -549,14 +558,19 @@
       wrapSelect.style.display = 'none';
       actions.style.setProperty('display', 'none', 'important');
       micBtn.style.display = 'flex';
-      micBtn.classList.add('active-mic');
-
-      speechRecog.onstart = () => {
-        icon.classList.add('listening');
-        msg.innerHTML = "Listening... Please state the PO Number.";
-        speakText("Aapka swagat hai. Kripya apna vendor P O number batayein.");
-      };
       
+      // Stop listening animation while speaking
+      icon.classList.remove('listening');
+      micBtn.classList.remove('active-mic');
+      msg.innerHTML = "AI is speaking...";
+      
+      await speakText("Aapka swagat hai. Kripya apna vendor P O number batayein.");
+      
+      // Now start listening after AI stops speaking
+      icon.classList.add('listening');
+      micBtn.classList.add('active-mic');
+      msg.innerHTML = "Listening... Please state the PO Number.";
+
       speechRecog.onresult = (event) => {
         let transcript = event.results[0][0].transcript.trim();
         let cleanText = transcript.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
@@ -623,7 +637,7 @@
     }
 
     // Step 2: Invoice
-    function startVoiceInvoice() {
+    async function startVoiceInvoice() {
       if (!speechRecog) return Swal.fire('Error', 'Voice input not supported.', 'error');
       
       stopCamera();
@@ -635,11 +649,13 @@
       const icon = document.getElementById("icon-inv");
       const msg = document.getElementById("msg-inv");
 
-      speechRecog.onstart = () => {
-        icon.classList.add('listening');
-        msg.innerHTML = "Listening for Invoice Number...";
-        speakText("Ab kripya apna Invoice number batayein.");
-      };
+      icon.classList.remove('listening');
+      msg.innerHTML = "AI is speaking...";
+      
+      await speakText("Ab kripya apna Invoice number batayein.");
+      
+      icon.classList.add('listening');
+      msg.innerHTML = "Listening for Invoice Number...";
       
       speechRecog.onresult = (event) => {
         let text = event.results[0][0].transcript.trim().toUpperCase().replace(/\s+/g, '');
