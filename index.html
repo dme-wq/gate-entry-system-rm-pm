@@ -713,19 +713,42 @@
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         
         let cleaned = "";
-        const invoiceRegex = /(?:invoice|inv|bill|memo|receipt)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
-        const match = text.match(invoiceRegex);
         
-        if (match && match[1] && match[1].length > 2) {
+        // Normalize text: remove spaces around dashes, slashes, and colons to fix OCR formatting issues
+        let normalizedText = text.replace(/\s*([:\-\/])\s*/g, '$1');
+        
+        // 1. Fuzzy Keyword Search (catches 'Involce', 'Inv', 'Bill No', etc.)
+        const invoiceRegex = /(?:invo[il1]ce|inv|bill|memo|receipt)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
+        const match = normalizedText.match(invoiceRegex);
+        
+        if (match && match[1] && match[1].length > 3) {
           cleaned = match[1].toUpperCase();
         } else {
-          let potentialMatches = text.match(/[a-zA-Z0-9]+\-\d+\/\d{4}/g); 
-          if (potentialMatches) { cleaned = potentialMatches[0]; } 
-          else { 
-            let words = text.split(/\s+/);
-            cleaned = words.reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase(); 
+          // 2. Pattern Search: Looks for standard invoice formats (e.g., ABC-123/2025 or INV/2024/01)
+          let potentialMatches = normalizedText.match(/[a-zA-Z0-9]+[\-\/]\d+[\-\/]?\d*/g); 
+          if (potentialMatches && potentialMatches[0].length > 4) { 
+            cleaned = potentialMatches[0].toUpperCase(); 
+          } else { 
+            // 3. Fallback: Longest word containing BOTH letters and numbers, OR a number longer than 4 digits.
+            let words = normalizedText.split(/\s+/);
+            let bestWord = "";
+            for (let word of words) {
+              let cleanWord = word.replace(/[^a-zA-Z0-9\-\/]/g, '');
+              let hasLetters = /[a-zA-Z]/.test(cleanWord);
+              let hasNumbers = /[0-9]/.test(cleanWord);
+              
+              if ((hasLetters && hasNumbers) || (hasNumbers && cleanWord.length > 4)) {
+                if (cleanWord.length > bestWord.length) {
+                  bestWord = cleanWord;
+                }
+              }
+            }
+            cleaned = bestWord.toUpperCase(); 
           }
         }
+        
+        // Remove trailing dashes or slashes
+        cleaned = cleaned.replace(/[\-\/]$/, '');
         
         document.getElementById("inputInvoice").value = cleaned;
         if (cleaned && cleaned.length > 1) {
