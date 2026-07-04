@@ -6,26 +6,30 @@
   <title>Smart AI Gate Entry</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
   
   <style>
     :root {
-      --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-      --card-bg: rgba(255, 255, 255, 0.65);
-      --card-border: rgba(255, 255, 255, 0.4);
-      --accent-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-      --accent-hover: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-      --text-main: #1e1b4b;
-      --text-muted: #4f46e5;
-      --shadow-soft: 0 20px 40px -10px rgba(79, 70, 229, 0.15);
+      --bg-dark: #09090b;
+      --card-bg: rgba(24, 24, 27, 0.6);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #22d3ee;
+      --accent-purple: #c084fc;
+      --accent-grad: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.3);
     }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-gradient);
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(217, 70, 239, 0.15) 0px, transparent 50%);
       color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
@@ -39,85 +43,98 @@
       width: 100%;
       max-width: 480px;
       padding: 20px;
+      z-index: 2;
     }
 
     .main-card {
       background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 40px 30px;
-      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: 45px 30px;
+      box-shadow: var(--shadow-glow), inset 0 1px 0 rgba(255,255,255,0.1);
       border: 1px solid var(--card-border);
       position: relative;
     }
 
-    /* Steps */
+    /* Steps & Transitions */
     .step-container {
       display: none;
-      animation: fadeInZoom 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: floatIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .step-container.active { display: block; }
     
-    @keyframes fadeInZoom {
-      from { opacity: 0; transform: translateY(10px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    @keyframes floatIn {
+      0% { opacity: 0; transform: translateY(20px) scale(0.95); filter: blur(5px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
     }
 
-    /* AI Icon / Assistant Visualizer */
-    .assistant-icon {
+    /* Orb / AI Visualizer */
+    .ai-orb-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ai-orb {
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background: #ffffff;
-      color: #4f46e5;
-      margin: 0 auto 25px;
+      background: var(--accent-grad);
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2rem;
-      border: 3px solid transparent;
-      background-clip: padding-box;
-      box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
-      position: relative;
+      color: #fff;
       z-index: 10;
+      transition: all 0.3s ease;
     }
     
-    /* Active AI Listening Ripples */
-    .assistant-icon.listening::before,
-    .assistant-icon.listening::after {
+    .ai-orb-container.listening .ai-orb {
+      animation: orbBreathe 1.5s ease-in-out infinite alternate;
+    }
+    .ai-orb-container.listening::before,
+    .ai-orb-container.listening::after {
       content: '';
       position: absolute;
-      inset: -12px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       border-radius: 50%;
-      border: 2px solid #7c3aed;
-      animation: pulseRings 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      z-index: -1;
+      border: 2px solid var(--accent-cyan);
+      animation: rippleDark 2s linear infinite;
+      z-index: 1;
     }
-    .assistant-icon.listening::after {
+    .ai-orb-container.listening::after {
       animation-delay: 1s;
-      inset: -24px;
-      border: 2px solid #4f46e5;
-      opacity: 0.5;
+      border-color: var(--accent-purple);
     }
 
-    @keyframes pulseRings {
-      0% { transform: scale(0.8); opacity: 1; }
-      100% { transform: scale(1.5); opacity: 0; }
+    @keyframes orbBreathe {
+      0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+      100% { transform: scale(1.1); box-shadow: 0 0 50px rgba(217, 70, 239, 0.8), inset 0 0 20px rgba(255,255,255,0.5); }
+    }
+    @keyframes rippleDark {
+      0% { width: 80px; height: 80px; opacity: 1; }
+      100% { width: 200px; height: 200px; opacity: 0; }
     }
 
     .message-box {
-      background: rgba(255, 255, 255, 0.8);
-      padding: 18px 24px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px 24px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.05);
       margin-bottom: 25px;
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-size: 1.15rem;
+      font-weight: 500;
       text-align: center;
       color: var(--text-main);
       line-height: 1.6;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
     }
 
     /* Inputs */
@@ -128,30 +145,30 @@
     }
     .modern-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.9);
-      border: 2px solid transparent;
-      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
       padding: 16px 20px;
-      color: var(--text-main);
-      font-size: 1.15rem;
+      color: #fff;
+      font-size: 1.2rem;
       transition: all 0.3s ease;
       text-align: center;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      font-weight: 500;
     }
     .modern-input:focus {
       outline: none;
-      background: #ffffff;
-      border-color: #7c3aed;
-      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+      background: rgba(0, 0, 0, 0.6);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
     }
+    .modern-input::placeholder { color: #64748b; }
     
     .prefix {
       position: absolute;
       left: 20px;
       top: 50%;
       transform: translateY(-50%);
-      color: #6366f1;
+      color: var(--accent-cyan);
       font-weight: 600;
       pointer-events: none;
     }
@@ -160,58 +177,46 @@
       text-align: left;
     }
 
+    /* Dropdown customization for dark mode */
+    select.modern-input {
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    select.modern-input option {
+      background: #1e293b;
+      color: #fff;
+    }
+
     /* Buttons */
     .btn-primary-elegant {
       background: var(--accent-grad);
       color: white;
       border: none;
       padding: 16px 24px;
-      border-radius: 14px;
+      border-radius: 16px;
       font-weight: 600;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       width: 100%;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+      box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
     }
     .btn-primary-elegant:hover {
-      background: var(--accent-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 20px -3px rgba(79, 70, 229, 0.4);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 15px 25px -5px rgba(139, 92, 246, 0.6);
     }
     .btn-secondary-elegant {
-      background: #ffffff;
-      color: #4f46e5;
-      border: 2px solid #e0e7ff;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
+      border: 1px solid rgba(255,255,255,0.1);
       box-shadow: none;
     }
     .btn-secondary-elegant:hover {
-      background: #f8fafc;
-      border-color: #c7d2fe;
-    }
-
-    .mic-btn {
-      background: var(--accent-grad);
-      color: white;
-      border-radius: 50%;
-      width: 75px;
-      height: 75px;
-      border: none;
-      font-size: 1.8rem;
-      margin: 0 auto 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .mic-btn:active { transform: scale(0.9); }
-    .mic-btn.active-mic { 
-      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-      box-shadow: 0 12px 25px rgba(239, 68, 68, 0.4); 
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
     }
 
     /* Action Grid */
@@ -222,26 +227,27 @@
       margin-bottom: 25px;
     }
     .action-box {
-      background: rgba(255, 255, 255, 0.8);
-      border: 2px solid transparent;
-      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
       padding: 25px 10px;
       text-align: center;
       cursor: pointer;
       transition: all 0.3s;
       color: var(--text-main);
-      font-weight: 600;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      font-weight: 500;
     }
     .action-box:hover {
-      background: #ffffff;
-      border-color: #8b5cf6;
-      transform: translateY(-3px);
-      box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.2);
+      background: rgba(255,255,255,0.05);
+      border-color: var(--accent-purple);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.2);
     }
     .action-box i {
       font-size: 2.2rem;
-      color: #6366f1;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       margin-bottom: 15px;
       display: block;
     }
@@ -249,12 +255,12 @@
     /* Camera */
     #camera-container {
       width: 100%;
-      border-radius: 16px;
+      border-radius: 18px;
       overflow: hidden;
       display: none;
       margin-bottom: 25px;
-      border: 2px solid #e0e7ff;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
     #video { width: 100%; display: block; }
     #canvas { display: none; }
@@ -266,9 +272,10 @@
       margin: 25px 0;
     }
     .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid #e0e7ff;
-      border-top-color: #7c3aed;
+      width: 45px; height: 45px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent-cyan);
+      border-right-color: var(--accent-purple);
       border-radius: 50%;
       animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
       margin: 0 auto 15px;
@@ -276,21 +283,54 @@
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
     .brand-title {
-      font-size: 1.8rem;
-      font-weight: 700;
+      font-size: 2rem;
+      font-weight: 800;
       text-align: center;
-      color: var(--text-main);
       margin-bottom: 8px;
       background: var(--accent-grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
     }
     .brand-subtitle {
       text-align: center;
       color: var(--text-muted);
-      font-size: 1rem;
-      font-weight: 500;
+      font-size: 1.05rem;
+      font-weight: 400;
       margin-bottom: 35px;
+    }
+
+    /* Mic specific floating button */
+    .floating-mic {
+      position: absolute;
+      bottom: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--bg-dark);
+      border: 2px solid var(--card-border);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      z-index: 20;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .floating-mic.active-mic {
+      background: var(--accent-grad);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+      animation: pulseMic 1.5s infinite;
+    }
+    @keyframes pulseMic {
+      0% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.1); }
+      100% { transform: translateX(-50%) scale(1); }
     }
   </style>
 </head>
@@ -303,37 +343,31 @@
       
       <!-- Welcome Screen -->
       <div class="step-container active" id="step-0">
-        <div class="assistant-icon" style="background: var(--accent-grad); color: white; border: none; font-size: 3rem;">
-          <i class="fas fa-microchip"></i>
+        <div class="ai-orb-container" id="orb-0">
+          <div class="ai-orb"><i class="fas fa-fingerprint"></i></div>
         </div>
         <div class="brand-title">AI Gate Entry</div>
-        <div class="brand-subtitle">Enterprise Smart Assistant</div>
-        
-        <div class="input-wrapper" style="display: block; margin-top: 25px;">
-          <input type="text" id="userName" class="modern-input" placeholder="Enter Your Name (Optional)" autocomplete="off">
-        </div>
+        <div class="brand-subtitle">Neuro-Linked Smart Assistant</div>
 
         <button class="btn-primary-elegant mt-4" onclick="startProcess()">
-          <i class="fas fa-microphone"></i> Start Gate Entry
+          <i class="fas fa-power-off"></i> Initialize AI
         </button>
 
-        <div class="general-loader" id="init-loader" style="display: none; margin-top: 20px;">
+        <div class="general-loader" id="init-loader" style="display: none; margin-top: 25px;">
           <div class="spinner"></div>
-          <div style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">Connecting to AI...</div>
+          <div style="color: var(--accent-cyan); font-size: 1rem; font-weight: 500;">Establishing Neural Link...</div>
         </div>
       </div>
 
       <!-- STEP 1: PO Number -->
       <div class="step-container" id="step-1">
-        <div class="assistant-icon" id="icon-po"><i class="fas fa-wave-square"></i></div>
+        <div class="ai-orb-container" id="orb-1">
+          <div class="ai-orb"><i class="fas fa-wave-square"></i></div>
+        </div>
         <div class="message-box" id="msg-po">
-          Please state the Vendor PO Number. <br><small style="color: #6366f1; font-weight: 500;">(Prefix RKD-25/ is automatic)</small>
+          Please state the Vendor PO Number. <br><small style="color: var(--accent-cyan); font-weight: 400;">(Prefix RKD-25/ is automatic)</small>
         </div>
         
-        <button class="mic-btn" id="btn-mic-po" onclick="startVoicePO()" style="display: none;">
-          <i class="fas fa-microphone"></i>
-        </button>
-
         <div class="input-wrapper" id="wrap-po">
           <span class="prefix">RKD-25/</span>
           <input type="text" id="inputPO" class="modern-input with-prefix" placeholder="Example: 399" autocomplete="off">
@@ -353,13 +387,19 @@
             Confirm <i class="fas fa-check"></i>
           </button>
         </div>
+        
+        <div class="floating-mic" id="btn-mic-po" onclick="startVoicePO()">
+          <i class="fas fa-microphone"></i>
+        </div>
       </div>
 
       <!-- STEP 2: Invoice Capture -->
       <div class="step-container" id="step-2">
-        <div class="assistant-icon" id="icon-inv"><i class="fas fa-file-invoice"></i></div>
+        <div class="ai-orb-container" id="orb-2">
+          <div class="ai-orb"><i class="fas fa-file-invoice"></i></div>
+        </div>
         <div class="message-box" id="msg-inv">
-          Please provide the Invoice Number.<br>Capture an image or dictate via voice.
+          Please provide the Invoice Number.<br><span style="font-size: 0.95rem; font-weight: 400; color: #94a3b8;">Scan the document or dictate via voice.</span>
         </div>
 
         <div class="action-grid" id="inv-actions">
@@ -368,22 +408,22 @@
             Scan Invoice
           </div>
           <div class="action-box" onclick="startVoiceInvoice()">
-            <i class="fas fa-microphone" style="background: linear-gradient(135deg, #ef4444, #b91c1c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            <i class="fas fa-microphone"></i>
             Use Voice
           </div>
         </div>
 
         <div id="camera-container">
           <video id="video" autoplay playsinline></video>
-          <button class="btn-primary-elegant" style="border-radius: 0; padding: 20px; font-size: 1.2rem;" onclick="captureImage()">
-            <i class="fas fa-camera"></i> Capture Photo
+          <button class="btn-primary-elegant" style="border-radius: 0; padding: 20px; font-size: 1.25rem;" onclick="captureImage()">
+            <i class="fas fa-crosshairs"></i> Extract Data
           </button>
         </div>
         <canvas id="canvas"></canvas>
 
         <div class="general-loader" id="ocr-loader">
           <div class="spinner"></div>
-          <div style="color: #7c3aed; font-weight: 600;">Extracting Data via AI...</div>
+          <div style="color: var(--accent-cyan); font-weight: 500;">Analyzing Document...</div>
         </div>
 
         <div class="input-wrapper mt-4" id="wrap-inv">
@@ -405,7 +445,7 @@
 
   <script>
     // ==========================================
-    // CONFIGURATION: Paste your Google Apps Script Web App API URL here
+    // CONFIGURATION
     // ==========================================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKdY9GfOLJ-RnjMDNhdHJhQAiP7PyQsQzEtqTAvD16RxcAhRKASZLoW36kP--5gYN1/exec';
 
@@ -464,7 +504,7 @@
         speechRecog = new SR();
         speechRecog.continuous = false;
         speechRecog.interimResults = false;
-        speechRecog.lang = 'hi-IN'; // Speech input in Hindi/English
+        speechRecog.lang = 'hi-IN'; 
       }
     }
 
@@ -496,7 +536,6 @@
 
           window.speechSynthesis.speak(u);
           
-          // Fallback resolve if speech gets stuck
           setTimeout(resolve, 5000);
         } else {
           resolve();
@@ -545,9 +584,9 @@
 
     // Step 1: PO Voice
     async function startVoicePO() {
-      if (!speechRecog) return Swal.fire('Error', 'Voice input not supported. Please use text.', 'error');
+      if (!speechRecog) return Swal.fire('Error', 'Voice input not supported.', 'error');
       
-      const icon = document.getElementById("icon-po");
+      const orb = document.getElementById("orb-1");
       const msg = document.getElementById("msg-po");
       const wrap = document.getElementById("wrap-po");
       const wrapSelect = document.getElementById("wrap-select-po");
@@ -557,17 +596,15 @@
       wrap.style.display = 'none';
       wrapSelect.style.display = 'none';
       actions.style.setProperty('display', 'none', 'important');
-      micBtn.style.display = 'flex';
       
-      // Stop listening animation while speaking
-      icon.classList.remove('listening');
+      orb.classList.remove('listening');
+      micBtn.style.display = 'flex';
       micBtn.classList.remove('active-mic');
       msg.innerHTML = "AI is speaking...";
       
       await speakText("Aapka swagat hai. Kripya apna vendor P O number batayein.");
       
-      // Now start listening after AI stops speaking
-      icon.classList.add('listening');
+      orb.classList.add('listening');
       micBtn.classList.add('active-mic');
       msg.innerHTML = "Listening... Please state the PO Number.";
 
@@ -589,7 +626,7 @@
         const fullPO = "RKD-25/" + cleanText;
         
         if (!validatePO(fullPO)) {
-          msg.innerHTML = `PO Number: <b>${fullPO}</b><br><span style="color:#e11d48;">Warning: PO not found. Please select manually.</span>`;
+          msg.innerHTML = `PO Number: <b>${fullPO}</b><br><span style="color:var(--accent-purple);">Warning: PO not found. Please select manually.</span>`;
           speakText("Lagta hai ye P O number galat hai. Kripya list mein se sahi P O number chun lijiye.");
           wrap.style.display = 'none';
           wrapSelect.style.display = 'block';
@@ -611,7 +648,7 @@
       };
       
       speechRecog.onend = () => { 
-        icon.classList.remove('listening'); 
+        orb.classList.remove('listening'); 
         micBtn.classList.remove('active-mic');
       };
       
@@ -646,15 +683,15 @@
       document.getElementById('wrap-inv').style.display = 'none';
       document.getElementById('actions-inv').style.setProperty('display', 'none', 'important');
       
-      const icon = document.getElementById("icon-inv");
+      const orb = document.getElementById("orb-2");
       const msg = document.getElementById("msg-inv");
 
-      icon.classList.remove('listening');
+      orb.classList.remove('listening');
       msg.innerHTML = "AI is speaking...";
       
       await speakText("Ab kripya apna Invoice number batayein.");
       
-      icon.classList.add('listening');
+      orb.classList.add('listening');
       msg.innerHTML = "Listening for Invoice Number...";
       
       speechRecog.onresult = (event) => {
@@ -677,7 +714,7 @@
         speakText("Main invoice number samajh nahi payi. Kripya type kijiye.");
       };
 
-      speechRecog.onend = () => { icon.classList.remove('listening'); };
+      speechRecog.onend = () => { orb.classList.remove('listening'); };
       
       try { speechRecog.start(); } catch(e) {}
     }
@@ -690,7 +727,7 @@
       const msg = document.getElementById('msg-inv');
       
       container.style.display = 'block';
-      msg.innerHTML = "Bring the invoice number into frame and press 'Capture Photo'.";
+      msg.innerHTML = "Bring the invoice number into frame and press 'Extract Data'.";
       speakText("Kripya invoice ko camera ke theek saamne rakhein.");
 
       try {
@@ -773,8 +810,7 @@
       const date = document.getElementById("entryDateRaw").value;
       const poSuffix = document.getElementById("inputPO").value.trim();
       const invoice = document.getElementById("inputInvoice").value.trim();
-      const email = document.getElementById("userName").value.trim() || "No Name";
-
+      
       if (!poSuffix || !invoice) {
         speakText("Kripya dono details bhar dijiye.");
         return Swal.fire('Error', 'Please enter all details.', 'error');
@@ -791,7 +827,7 @@
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
       speakText("Aapka data save kiya jaa raha hai.");
 
-      const payload = { entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: email };
+      const payload = { entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: "System User" };
 
       fetch(SCRIPT_URL, {
         method: 'POST',
@@ -815,8 +851,14 @@
         btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
         if(res.success) {
           speakText("Aapki Gate entry safaltapoorvak darj ho gayi hai.");
-          Swal.fire({ icon: 'success', title: 'Success!', text: 'Gate Entry recorded.', confirmButtonColor: '#4f46e5' })
-          .then(() => { location.reload(); });
+          Swal.fire({ 
+            icon: 'success', 
+            title: 'Success!', 
+            text: 'Gate Entry recorded.', 
+            confirmButtonColor: '#8b5cf6',
+            background: '#18181b',
+            color: '#fff'
+          }).then(() => { location.reload(); });
         } else {
           speakText("Server error aaya hai.");
           Swal.fire('Error', res.message || "Submission failed", 'error');
@@ -826,8 +868,14 @@
         btn.disabled = false;
         btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
         speakText("Entry darj ho gayi hai.");
-        Swal.fire({ icon: 'success', title: 'Submitted', text: 'Request sent to server', confirmButtonColor: '#4f46e5' })
-          .then(() => { location.reload(); });
+        Swal.fire({ 
+          icon: 'success', 
+          title: 'Submitted', 
+          text: 'Request sent to server', 
+          confirmButtonColor: '#8b5cf6',
+          background: '#18181b',
+          color: '#fff'
+        }).then(() => { location.reload(); });
       });
     }
   </script>
