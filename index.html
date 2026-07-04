@@ -653,10 +653,14 @@
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
       
-      const maxDim = 1200;
+      // Limit to 1000px for strict mobile memory compliance
+      const maxDim = 1000;
       let width = video.videoWidth, height = video.videoHeight;
-      if (width > height) { if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; } }
-      else { if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; } }
+      if (width > height) { 
+        if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; } 
+      } else { 
+        if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; } 
+      }
       
       canvas.width = width; canvas.height = height;
       ctx.drawImage(video, 0, 0, width, height);
@@ -670,23 +674,33 @@
         data[i] = data[i+1] = data[i+2] = brightness;
       }
       ctx.putImageData(imgData, 0, 0);
-      performOCR(canvas.toDataURL('image/jpeg', 0.9));
+      performOCR(canvas.toDataURL('image/jpeg', 0.8));
     }
 
     async function performOCR(base64) {
       document.getElementById('ocr-loader').style.display = 'block';
-      document.getElementById('msg-inv').innerHTML = "Extracting text...";
+      document.getElementById('msg-inv').innerHTML = "Initializing Smart Scanner...";
 
       try {
-        if (!worker) await initTesseract();
+        if (!worker) {
+           worker = await Tesseract.createWorker('eng', 1, {
+             logger: m => {
+               if(m.status === 'recognizing text') {
+                 document.getElementById('msg-inv').innerHTML = `Extracting Text: ${Math.round(m.progress * 100)}%`;
+               }
+             }
+           });
+        }
+        
         const { data: { text } } = await worker.recognize(base64);
+        console.log("Raw OCR: ", text);
         
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         
         let cleaned = "";
-        const invoiceRegex = /(?:invoice|inv|bill|memo)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
+        const invoiceRegex = /(?:invoice|inv|bill|memo|receipt)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
         const match = text.match(invoiceRegex);
         
         if (match && match[1] && match[1].length > 2) {
@@ -694,7 +708,10 @@
         } else {
           let potentialMatches = text.match(/[a-zA-Z0-9]+\-\d+\/\d{4}/g); 
           if (potentialMatches) { cleaned = potentialMatches[0]; } 
-          else { cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase(); }
+          else { 
+            let words = text.split(/\s+/);
+            cleaned = words.reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase(); 
+          }
         }
         
         document.getElementById("inputInvoice").value = cleaned;
@@ -704,10 +721,12 @@
           document.getElementById('msg-inv').innerHTML = `Type invoice manually.`;
         }
       } catch (err) {
+        console.error("OCR Final Error:", err);
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-        Swal.fire('OCR Failed', 'Memory Limit Exceeded. Try again.', 'warning');
+        let errMsg = err.message || String(err);
+        Swal.fire('OCR Failed', 'Error: ' + errMsg + '. Please type manually.', 'warning');
       }
     }
 
