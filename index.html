@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
+  <script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
   
   <style>
     :root {
@@ -684,15 +684,18 @@
         data[i] = data[i+1] = data[i+2] = brightness;
       }
       ctx.putImageData(imgData, 0, 0);
-      performOCR(canvas.toDataURL('image/jpeg', 0.8));
+      
+      // Pass the canvas element directly to avoid huge Base64 memory allocation
+      performOCR(canvas);
     }
 
-    async function performOCR(base64) {
+    async function performOCR(imageSource) {
       document.getElementById('ocr-loader').style.display = 'block';
       document.getElementById('msg-inv').innerHTML = "Initializing Smart Scanner...";
 
       try {
         if (!worker) {
+           // Tesseract v5 Syntax
            worker = await Tesseract.createWorker('eng', 1, {
              logger: m => {
                if(m.status === 'recognizing text') {
@@ -702,7 +705,7 @@
            });
         }
         
-        const { data: { text } } = await worker.recognize(base64);
+        const { data: { text } } = await worker.recognize(imageSource);
         console.log("Raw OCR: ", text);
         
         document.getElementById('ocr-loader').style.display = 'none';
