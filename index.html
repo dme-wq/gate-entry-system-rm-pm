@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Gate Entry System</title>
-
+  <title>Smart AI Gate Entry</title>
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/tesseract.js@v4.1.1/dist/tesseract.min.js"></script>
-
+  
   <style>
     :root {
-      --bg-light: #f4f7f6;
-      --card-bg: #ffffff;
-      --accent: #1d4ed8;
-      --accent-hover: #1e3a8a;
-      --text-main: #1f2937;
-      --text-muted: #6b7280;
-      --border-color: #e5e7eb;
+      --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+      --card-bg: rgba(255, 255, 255, 0.65);
+      --card-border: rgba(255, 255, 255, 0.4);
+      --accent-grad: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      --accent-hover: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+      --text-main: #1e1b4b;
+      --text-muted: #4f46e5;
+      --shadow-soft: 0 20px 40px -10px rgba(79, 70, 229, 0.15);
     }
 
     body {
       font-family: 'Inter', sans-serif;
-      background-color: var(--bg-light);
+      background: var(--bg-gradient);
       color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
@@ -43,181 +43,175 @@
 
     .main-card {
       background: var(--card-bg);
-      border-radius: 16px;
-      padding: 35px 25px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-      border: 1px solid var(--border-color);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 40px 30px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--card-border);
       position: relative;
     }
 
     /* Steps */
     .step-container {
       display: none;
-      animation: fadeIn 0.3s ease forwards;
+      animation: fadeInZoom 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .step-container.active { display: block; }
+    
+    @keyframes fadeInZoom {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .step-container.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* AI Icon / Assistant */
+    /* AI Icon / Assistant Visualizer */
     .assistant-icon {
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
-      background: #eff6ff;
-      color: var(--accent);
-      margin: 0 auto 20px;
+      background: #ffffff;
+      color: #4f46e5;
+      margin: 0 auto 25px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
-      border: 2px solid #bfdbfe;
+      font-size: 2rem;
+      border: 3px solid transparent;
+      background-clip: padding-box;
+      box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
       position: relative;
+      z-index: 10;
     }
-
+    
+    /* Active AI Listening Ripples */
+    .assistant-icon.listening::before,
     .assistant-icon.listening::after {
       content: '';
       position: absolute;
-      inset: -8px;
+      inset: -12px;
       border-radius: 50%;
-      border: 2px solid var(--accent);
-      animation: ripple 1.5s infinite;
+      border: 2px solid #7c3aed;
+      animation: pulseRings 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      z-index: -1;
+    }
+    .assistant-icon.listening::after {
+      animation-delay: 1s;
+      inset: -24px;
+      border: 2px solid #4f46e5;
+      opacity: 0.5;
     }
 
-    @keyframes ripple {
-      0% {
-        transform: scale(0.9);
-        opacity: 1;
-      }
-
-      100% {
-        transform: scale(1.4);
-        opacity: 0;
-      }
+    @keyframes pulseRings {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
     }
 
     .message-box {
-      background: #f8fafc;
-      padding: 16px 20px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 18px 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.6);
       margin-bottom: 25px;
-      font-size: 1.05rem;
-      font-weight: 500;
+      font-size: 1.1rem;
+      font-weight: 600;
       text-align: center;
       color: var(--text-main);
-      line-height: 1.5;
+      line-height: 1.6;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
     /* Inputs */
     .input-wrapper {
       position: relative;
-      margin-bottom: 20px;
-      display: none;
-      /* Hidden by default */
+      margin-bottom: 25px;
+      display: none; 
     }
-
     .modern-input {
       width: 100%;
-      background: #ffffff;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
-      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      padding: 16px 20px;
       color: var(--text-main);
-      font-size: 1.1rem;
-      transition: 0.2s;
+      font-size: 1.15rem;
+      transition: all 0.3s ease;
       text-align: center;
-      font-weight: 500;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
-
     .modern-input:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.1);
+      background: #ffffff;
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
     }
-
+    
     .prefix {
       position: absolute;
-      left: 16px;
+      left: 20px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--text-muted);
-      font-weight: 500;
+      color: #6366f1;
+      font-weight: 600;
       pointer-events: none;
     }
-
     .with-prefix {
-      padding-left: 90px;
+      padding-left: 100px;
       text-align: left;
     }
 
     /* Buttons */
     .btn-primary-elegant {
-      background: var(--accent);
+      background: var(--accent-grad);
       color: white;
       border: none;
-      padding: 14px 24px;
-      border-radius: 10px;
-      font-weight: 500;
-      font-size: 1.05rem;
+      padding: 16px 24px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 1.1rem;
       width: 100%;
-      transition: 0.2s;
+      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
+      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
     }
-
     .btn-primary-elegant:hover {
       background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -3px rgba(79, 70, 229, 0.4);
     }
-
     .btn-secondary-elegant {
       background: #ffffff;
-      color: var(--text-main);
-      border: 1px solid #d1d5db;
+      color: #4f46e5;
+      border: 2px solid #e0e7ff;
+      box-shadow: none;
     }
-
     .btn-secondary-elegant:hover {
-      background: #f9fafb;
+      background: #f8fafc;
+      border-color: #c7d2fe;
     }
 
     .mic-btn {
-      background: var(--accent);
+      background: var(--accent-grad);
       color: white;
       border-radius: 50%;
-      width: 64px;
-      height: 64px;
+      width: 75px;
+      height: 75px;
       border: none;
-      font-size: 1.5rem;
-      margin: 0 auto 20px;
+      font-size: 1.8rem;
+      margin: 0 auto 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
-      transition: 0.2s;
+      box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-
-    .mic-btn:active {
-      transform: scale(0.95);
-    }
-
-    .mic-btn.active-mic {
-      background: #dc2626;
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    .mic-btn:active { transform: scale(0.9); }
+    .mic-btn.active-mic { 
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      box-shadow: 0 12px 25px rgba(239, 68, 68, 0.4); 
     }
 
     /* Action Grid */
@@ -225,139 +219,133 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 15px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
-
     .action-box {
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid transparent;
+      border-radius: 16px;
+      padding: 25px 10px;
       text-align: center;
       cursor: pointer;
-      transition: 0.2s;
-      background: #ffffff;
+      transition: all 0.3s;
       color: var(--text-main);
-      font-weight: 500;
+      font-weight: 600;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
-
     .action-box:hover {
-      border-color: var(--accent);
-      background: #eff6ff;
+      background: #ffffff;
+      border-color: #8b5cf6;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.2);
     }
-
     .action-box i {
-      font-size: 1.8rem;
-      color: var(--accent);
-      margin-bottom: 12px;
+      font-size: 2.2rem;
+      color: #6366f1;
+      margin-bottom: 15px;
       display: block;
     }
 
     /* Camera */
     #camera-container {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
       display: none;
-      margin-bottom: 20px;
-      border: 1px solid var(--border-color);
+      margin-bottom: 25px;
+      border: 2px solid #e0e7ff;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
     }
-
-    #video {
-      width: 100%;
-      display: block;
-    }
-
-    #canvas {
-      display: none;
-    }
+    #video { width: 100%; display: block; }
+    #canvas { display: none; }
 
     /* Loader */
     .general-loader {
       display: none;
       text-align: center;
-      margin: 20px 0;
+      margin: 25px 0;
     }
-
     .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid #e5e7eb;
-      border-top-color: var(--accent);
+      width: 40px; height: 40px;
+      border: 4px solid #e0e7ff;
+      border-top-color: #7c3aed;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 12px;
+      animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      margin: 0 auto 15px;
     }
-
-    @keyframes spin {
-      100% {
-        transform: rotate(360deg);
-      }
-    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
     .brand-title {
-      font-size: 1.5rem;
-      font-weight: 600;
+      font-size: 1.8rem;
+      font-weight: 700;
       text-align: center;
       color: var(--text-main);
       margin-bottom: 8px;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-
     .brand-subtitle {
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 30px;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 35px;
     }
   </style>
 </head>
-
 <body>
 
   <input type="hidden" id="entryDateRaw" value="">
 
   <div class="app-container">
     <div class="main-card">
-
+      
       <!-- Welcome Screen -->
       <div class="step-container active" id="step-0">
-        <div class="assistant-icon" style="background: #ffffff; border: none; font-size: 3rem;"><i
-            class="fas fa-building text-primary"></i></div>
-        <div class="brand-title">Gate Entry System</div>
-        <div class="brand-subtitle">Smart Assistant for RM/PM</div>
-
-        <div class="input-wrapper" style="display: block; margin-top: 20px;">
-          <input type="text" id="userName" class="modern-input" placeholder="Enter Your Name (Optional)"
-            autocomplete="off">
+        <div class="assistant-icon" style="background: var(--accent-grad); color: white; border: none; font-size: 3rem;">
+          <i class="fas fa-microchip"></i>
+        </div>
+        <div class="brand-title">AI Gate Entry</div>
+        <div class="brand-subtitle">Enterprise Smart Assistant</div>
+        
+        <div class="input-wrapper" style="display: block; margin-top: 25px;">
+          <input type="text" id="userName" class="modern-input" placeholder="Enter Your Name (Optional)" autocomplete="off">
         </div>
 
         <button class="btn-primary-elegant mt-4" onclick="startProcess()">
           <i class="fas fa-microphone"></i> Start Gate Entry
         </button>
 
-        <div class="general-loader" id="init-loader" style="display: none; margin-top: 15px;">
+        <div class="general-loader" id="init-loader" style="display: none; margin-top: 20px;">
           <div class="spinner"></div>
-          <div style="color: var(--text-muted); font-size: 0.9rem;">Initializing System...</div>
+          <div style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">Connecting to AI...</div>
         </div>
       </div>
 
       <!-- STEP 1: PO Number -->
       <div class="step-container" id="step-1">
-        <div class="assistant-icon" id="icon-po"><i class="fas fa-headset"></i></div>
+        <div class="assistant-icon" id="icon-po"><i class="fas fa-wave-square"></i></div>
         <div class="message-box" id="msg-po">
-          Please state the Vendor PO Number. <br><small class="text-muted">(Prefix RKD-25/ is automatic)</small>
+          Please state the Vendor PO Number. <br><small style="color: #6366f1; font-weight: 500;">(Prefix RKD-25/ is automatic)</small>
         </div>
-
+        
         <button class="mic-btn" id="btn-mic-po" onclick="startVoicePO()" style="display: none;">
           <i class="fas fa-microphone"></i>
         </button>
 
         <div class="input-wrapper" id="wrap-po">
           <span class="prefix">RKD-25/</span>
-          <input type="text" id="inputPO" class="modern-input with-prefix" placeholder="Example: 399"
-            autocomplete="off">
+          <input type="text" id="inputPO" class="modern-input with-prefix" placeholder="Example: 399" autocomplete="off">
         </div>
 
-        <div class="d-flex gap-2 mt-3" id="actions-po" style="display: none !important;">
+        <div class="input-wrapper" id="wrap-select-po" style="display: none;">
+          <select id="selectPO" class="modern-input" onchange="document.getElementById('inputPO').value = this.value">
+            <option value="">Select PO from list</option>
+          </select>
+        </div>
+
+        <div class="d-flex gap-3 mt-4" id="actions-po" style="display: none !important;">
           <button class="btn-primary-elegant btn-secondary-elegant w-50" onclick="startVoicePO()">
             <i class="fas fa-undo"></i> Retry
           </button>
@@ -371,39 +359,38 @@
       <div class="step-container" id="step-2">
         <div class="assistant-icon" id="icon-inv"><i class="fas fa-file-invoice"></i></div>
         <div class="message-box" id="msg-inv">
-          Please provide the Invoice Number.<br>You can capture an image or use your voice.
+          Please provide the Invoice Number.<br>Capture an image or dictate via voice.
         </div>
 
         <div class="action-grid" id="inv-actions">
           <div class="action-box" onclick="startCamera()">
             <i class="fas fa-camera"></i>
-            Capture Image
+            Scan Invoice
           </div>
           <div class="action-box" onclick="startVoiceInvoice()">
-            <i class="fas fa-microphone" style="color: #ef4444;"></i>
+            <i class="fas fa-microphone" style="background: linear-gradient(135deg, #ef4444, #b91c1c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
             Use Voice
           </div>
         </div>
 
         <div id="camera-container">
           <video id="video" autoplay playsinline></video>
-          <button class="btn-primary-elegant" style="border-radius: 0; padding: 16px;" onclick="captureImage()">
-            <i class="fas fa-camera"></i> Take Photo
+          <button class="btn-primary-elegant" style="border-radius: 0; padding: 20px; font-size: 1.2rem;" onclick="captureImage()">
+            <i class="fas fa-camera"></i> Capture Photo
           </button>
         </div>
         <canvas id="canvas"></canvas>
 
         <div class="general-loader" id="ocr-loader">
           <div class="spinner"></div>
-          <div style="color: var(--accent); font-weight: 500;">Scanning Invoice Number...</div>
+          <div style="color: #7c3aed; font-weight: 600;">Extracting Data via AI...</div>
         </div>
 
-        <div class="input-wrapper mt-3" id="wrap-inv">
-          <input type="text" id="inputInvoice" class="modern-input" placeholder="Enter Invoice Number"
-            autocomplete="off">
+        <div class="input-wrapper mt-4" id="wrap-inv">
+          <input type="text" id="inputInvoice" class="modern-input" placeholder="Enter Invoice Number" autocomplete="off">
         </div>
 
-        <div class="d-flex gap-2 mt-3" id="actions-inv" style="display: none !important;">
+        <div class="d-flex gap-3 mt-4" id="actions-inv" style="display: none !important;">
           <button class="btn-primary-elegant btn-secondary-elegant w-50" onclick="prevStep(1)">
             Back
           </button>
@@ -430,7 +417,7 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       initSpeechRecognition();
-
+      
       const today = new Date();
       const dd = String(today.getDate()).padStart(2, '0');
       const MM = String(today.getMonth() + 1).padStart(2, '0');
@@ -451,6 +438,12 @@
         const data = await response.json();
         if (data.success && data.vendorPOs) {
           validVendorPOs = data.vendorPOs;
+          const selectEl = document.getElementById("selectPO");
+          selectEl.innerHTML = '<option value="">Manual Select (P.O. not found)</option>';
+          validVendorPOs.forEach(po => {
+            let displayPO = po.replace("RKD-25/", "");
+            selectEl.innerHTML += `<option value="${displayPO}">${po}</option>`;
+          });
         }
       } catch (e) {
         console.error("Failed to fetch PO list", e);
@@ -471,7 +464,18 @@
         speechRecog = new SR();
         speechRecog.continuous = false;
         speechRecog.interimResults = false;
-        speechRecog.lang = 'hi-IN'; // Keep understanding Hindi/English speech
+        speechRecog.lang = 'hi-IN'; // Speech input in Hindi/English
+      }
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Cancel any ongoing speech
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'hi-IN'; // Pronounce words in natural Hindi
+        u.pitch = 1.1; 
+        u.rate = 0.95;
+        window.speechSynthesis.speak(u);
       }
     }
 
@@ -479,15 +483,15 @@
       document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
       document.getElementById('step-' + step).classList.add('active');
     }
-
+    
     function prevStep(step) {
       stopCamera();
-      if (speechRecog) speechRecog.stop();
-
-      if (step === 1) {
-        startVoicePO();
+      if(speechRecog) speechRecog.stop();
+      
+      if(step === 1) {
+          startVoicePO();
       }
-
+      
       showStep(step);
     }
 
@@ -495,9 +499,8 @@
       if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
         return Swal.fire('Setup Incomplete', 'Please update the SCRIPT_URL in the code.', 'error');
       }
-
+      
       if (validVendorPOs.length === 0) {
-        // If data hasn't loaded yet, show a loader and wait briefly
         document.getElementById('init-loader').style.display = 'block';
         fetchVendorPOs().then(() => {
           document.getElementById('init-loader').style.display = 'none';
@@ -518,14 +521,16 @@
     // Step 1: PO Voice
     function startVoicePO() {
       if (!speechRecog) return Swal.fire('Error', 'Voice input not supported. Please use text.', 'error');
-
+      
       const icon = document.getElementById("icon-po");
       const msg = document.getElementById("msg-po");
       const wrap = document.getElementById("wrap-po");
+      const wrapSelect = document.getElementById("wrap-select-po");
       const actions = document.getElementById("actions-po");
       const micBtn = document.getElementById("btn-mic-po");
 
       wrap.style.display = 'none';
+      wrapSelect.style.display = 'none';
       actions.style.setProperty('display', 'none', 'important');
       micBtn.style.display = 'flex';
       micBtn.classList.add('active-mic');
@@ -533,99 +538,117 @@
       speechRecog.onstart = () => {
         icon.classList.add('listening');
         msg.innerHTML = "Listening... Please state the PO Number.";
+        speakText("Kripya Vendor P O number batayein.");
       };
-
+      
       speechRecog.onresult = (event) => {
         let transcript = event.results[0][0].transcript.trim();
         let cleanText = transcript.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
-
-        if (cleanText.includes("RKD25")) cleanText = cleanText.replace("RKD25", "");
-        if (cleanText.startsWith("25")) cleanText = cleanText.substring(2);
-        if (cleanText.startsWith("/")) cleanText = cleanText.substring(1);
-        if (cleanText.startsWith("-")) cleanText = cleanText.substring(1);
+        
+        if(cleanText.includes("RKD25")) cleanText = cleanText.replace("RKD25", "");
+        if(cleanText.startsWith("25")) cleanText = cleanText.substring(2);
+        if(cleanText.startsWith("/")) cleanText = cleanText.substring(1);
+        if(cleanText.startsWith("-")) cleanText = cleanText.substring(1);
 
         document.getElementById("inputPO").value = cleanText;
-
+        document.getElementById("selectPO").value = cleanText;
+        
         micBtn.style.display = 'none';
-        wrap.style.display = 'block';
         actions.style.setProperty('display', 'flex', 'important');
-
+        
         const fullPO = "RKD-25/" + cleanText;
-
+        
         if (!validatePO(fullPO)) {
-          msg.innerHTML = `PO Number: <b>${fullPO}</b><br><span style="color:red;">Warning: PO not found in database.</span>`;
-          speakText("PO number not found in the list. Please verify.");
+          msg.innerHTML = `PO Number: <b>${fullPO}</b><br><span style="color:#e11d48;">Warning: PO not found. Please select manually.</span>`;
+          speakText("Maaf kijiye, yeh P O number list mein nahi mila. Kripya list mein se select karein.");
+          wrap.style.display = 'none';
+          wrapSelect.style.display = 'block';
         } else {
           msg.innerHTML = `PO Number: <b>${fullPO}</b><br>Is this correct?`;
-          speakText(`PO Number ${fullPO}. Confirm.`);
+          speakText("P O number " + cleanText + " prapt hua. Kripya pushti karein.");
+          wrap.style.display = 'block';
+          wrapSelect.style.display = 'none';
         }
       };
-
+      
       speechRecog.onerror = (event) => {
         micBtn.style.display = 'none';
-        wrap.style.display = 'block';
+        wrap.style.display = 'none';
+        wrapSelect.style.display = 'block';
         actions.style.setProperty('display', 'flex', 'important');
-        msg.innerHTML = `Voice unclear (${event.error}). Please type manually or retry.`;
+        msg.innerHTML = `Voice unclear (${event.error}). Please select from list.`;
+        speakText("Aawaz spasht nahi aayi. Kripya list se P O number select karein.");
       };
-
-      speechRecog.onend = () => {
-        icon.classList.remove('listening');
+      
+      speechRecog.onend = () => { 
+        icon.classList.remove('listening'); 
         micBtn.classList.remove('active-mic');
       };
-
-      try { speechRecog.start(); } catch (e) { }
+      
+      try { speechRecog.start(); } catch(e) {}
     }
 
     function confirmPO() {
       const val = document.getElementById("inputPO").value.trim();
-      if (!val) return Swal.fire('Error', 'Please enter a PO Number.', 'warning');
-
+      if (!val) {
+        speakText("Kripya P O number darj karein.");
+        return Swal.fire('Error', 'Please enter a PO Number.', 'warning');
+      }
+      
       const fullPO = "RKD-25/" + val;
       if (validVendorPOs.length > 0 && !validatePO(fullPO)) {
+        document.getElementById("wrap-po").style.display = 'none';
+        document.getElementById("wrap-select-po").style.display = 'block';
+        speakText("Kripya valid P O number select karein.");
         return Swal.fire('Invalid PO', 'The entered PO number does not exist in the database.', 'error');
       }
-
+      
       showStep(2);
     }
 
     // Step 2: Invoice
     function startVoiceInvoice() {
       if (!speechRecog) return Swal.fire('Error', 'Voice input not supported.', 'error');
-
+      
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
       document.getElementById('inv-actions').style.display = 'none';
       document.getElementById('wrap-inv').style.display = 'none';
       document.getElementById('actions-inv').style.setProperty('display', 'none', 'important');
-
+      
       const icon = document.getElementById("icon-inv");
       const msg = document.getElementById("msg-inv");
 
       speechRecog.onstart = () => {
         icon.classList.add('listening');
         msg.innerHTML = "Listening for Invoice Number...";
+        speakText("Kripya Invoice number batayein.");
       };
-
+      
       speechRecog.onresult = (event) => {
         let text = event.results[0][0].transcript.trim().toUpperCase().replace(/\s+/g, '');
         document.getElementById("inputInvoice").value = text;
-
+        
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         msg.innerHTML = `Invoice Number: <b>${text}</b>.<br>Please edit if necessary.`;
-        speakText(`Invoice Number ${text} received. Submit.`);
+        
+        // Convert to space-separated characters for clear reading
+        let readAloud = text.split('').join(' ');
+        speakText("Invoice number, " + readAloud + ", prapt hua. Kripya submit karein.");
       };
-
+      
       speechRecog.onerror = (event) => {
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         document.getElementById('inv-actions').style.display = 'grid';
         msg.innerHTML = `Voice unclear (${event.error}). Please type manually.`;
+        speakText("Aawaz spasht nahi aayi. Kripya invoice number type karein.");
       };
 
       speechRecog.onend = () => { icon.classList.remove('listening'); };
-
-      try { speechRecog.start(); } catch (e) { }
+      
+      try { speechRecog.start(); } catch(e) {}
     }
 
     // Camera & OCR
@@ -634,9 +657,10 @@
       const container = document.getElementById('camera-container');
       const video = document.getElementById('video');
       const msg = document.getElementById('msg-inv');
-
+      
       container.style.display = 'block';
-      msg.innerHTML = "Bring the invoice number into frame and press 'Take Photo'.";
+      msg.innerHTML = "Bring the invoice number into frame and press 'Capture Photo'.";
+      speakText("Kripya invoice ko camera ke saamne laayein.");
 
       try {
         videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -661,19 +685,19 @@
       const video = document.getElementById('video');
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
-
+      
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+      
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
-
+      
       let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       let data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
         let brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-        data[i] = data[i + 1] = data[i + 2] = brightness;
+        data[i] = data[i+1] = data[i+2] = brightness;
       }
       ctx.putImageData(imgData, 0, 0);
 
@@ -683,26 +707,30 @@
     async function performOCR(base64) {
       document.getElementById('ocr-loader').style.display = 'block';
       document.getElementById('msg-inv').innerHTML = "Scanning invoice, please wait...";
+      speakText("A i, Invoice scan kar raha hai, kripya prateeksha karein.");
 
       try {
         if (!worker) await initTesseract();
         const { data: { text } } = await worker.recognize(base64);
-
+        
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-
+        
         const cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
-
+        
         document.getElementById("inputInvoice").value = cleaned;
         document.getElementById('msg-inv').innerHTML = `Invoice Number found: <b>${cleaned}</b>.<br>Please edit if necessary.`;
-        speakText("Invoice number captured. Please confirm.");
+        
+        let readAloud = cleaned.split('').join(' ');
+        speakText("Invoice scan poora hua. Number hai " + readAloud + ". Kripya submit karein.");
 
       } catch (err) {
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         Swal.fire('Error', 'Failed to read invoice, please type manually.', 'warning');
+        speakText("Invoice scan fail ho gaya, kripya manually type karein.");
       }
     }
 
@@ -716,66 +744,61 @@
       const invoice = document.getElementById("inputInvoice").value.trim();
       const email = document.getElementById("userName").value.trim() || "No Name";
 
-      if (!poSuffix || !invoice) return Swal.fire('Error', 'Please enter all details.', 'error');
-
+      if (!poSuffix || !invoice) {
+        speakText("Kripya sabhi details darj karein.");
+        return Swal.fire('Error', 'Please enter all details.', 'error');
+      }
+      
       const fullPO = "RKD-25/" + poSuffix;
       if (validVendorPOs.length > 0 && !validatePO(fullPO)) {
+        speakText("Galat P O number. Kripya check karein.");
         return Swal.fire('Invalid PO', 'The entered PO number does not exist in the database.', 'error');
       }
 
       const btn = document.getElementById("btn-submit");
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+      speakText("Data submit ho raha hai...");
 
       const payload = { entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: email };
 
       fetch(SCRIPT_URL, {
         method: 'POST',
-        redirect: 'follow', // Ensures Google Apps Script 302 redirects are handled automatically
+        redirect: 'follow', 
         body: JSON.stringify(payload),
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         }
       })
-        .then(response => {
-          // Apps Script can sometimes return an opaque response due to CORS redirects.
-          // We will consider it a success if the fetch promise resolves without a network error.
-          if (!response.ok && response.type !== 'opaque') {
+      .then(response => {
+        if (!response.ok && response.type !== 'opaque') {
             throw new Error("Network error");
-          }
-          return response.text();
-        })
-        .then(text => {
-          let res = { success: true };
-          try { if (text) res = JSON.parse(text); } catch (e) { }
-
-          btn.disabled = false;
-          btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
-          if (res.success) {
-            Swal.fire({ icon: 'success', title: 'Success!', text: 'Gate Entry recorded.', confirmButtonColor: '#1d4ed8' })
-              .then(() => { location.reload(); });
-            speakText("Gate entry successfully recorded.");
-          } else {
-            Swal.fire('Error', res.message || "Submission failed", 'error');
-          }
-        })
-        .catch(err => {
-          btn.disabled = false;
-          btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
-          // Fallback for CORS opaque response success (some browsers treat the final 200 as opaque if headers are lost)
-          Swal.fire({ icon: 'success', title: 'Submitted', text: 'Request sent to server (CORS limited view)', confirmButtonColor: '#1d4ed8' })
-            .then(() => { location.reload(); });
-        });
-    }
-
-    function speakText(text) {
-      if ('speechSynthesis' in window) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'hi-IN';
-        window.speechSynthesis.speak(u);
-      }
+        }
+        return response.text();
+      })
+      .then(text => {
+        let res = { success: true }; 
+        try { if(text) res = JSON.parse(text); } catch(e) {}
+        
+        btn.disabled = false;
+        btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
+        if(res.success) {
+          speakText("Aapki Gate entry safaltapoorvak darj ho gayi hai.");
+          Swal.fire({ icon: 'success', title: 'Success!', text: 'Gate Entry recorded.', confirmButtonColor: '#4f46e5' })
+          .then(() => { location.reload(); });
+        } else {
+          speakText("Server error aaya hai.");
+          Swal.fire('Error', res.message || "Submission failed", 'error');
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
+        speakText("Entry darj ho gayi hai.");
+        Swal.fire({ icon: 'success', title: 'Submitted', text: 'Request sent to server', confirmButtonColor: '#4f46e5' })
+          .then(() => { location.reload(); });
+      });
     }
   </script>
 </body>
-
 </html>
