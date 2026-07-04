@@ -731,7 +731,14 @@
       speakText("Kripya invoice ko camera ke theek saamne rakhein.");
 
       try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        // Request high resolution for better OCR accuracy
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          } 
+        });
         video.srcObject = videoStream;
       } catch (err) {
         container.style.display = 'none';
@@ -761,11 +768,16 @@
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
       
+      // Advanced Image Preprocessing for better OCR (Grayscale + High Contrast/Binarization)
       let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       let data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
+        // Grayscale
         let brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-        data[i] = data[i+1] = data[i+2] = brightness;
+        // Binarization (Threshold) to make text black and background white
+        let threshold = 140; 
+        let color = brightness > threshold ? 255 : 0;
+        data[i] = data[i+1] = data[i+2] = color;
       }
       ctx.putImageData(imgData, 0, 0);
 
@@ -779,21 +791,40 @@
 
       try {
         if (!worker) await initTesseract();
+        
+        // Ensure worker is fully ready if createWorker didn't fail
         const { data: { text } } = await worker.recognize(base64);
+        console.log("OCR Raw Text:", text); // Debugging
         
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         
-        const cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
+        // Smart Regex for Invoice Number Extraction
+        let cleaned = "";
+        const invoiceRegex = /(?:invoice|inv|bill|memo)(?:\s*no\.?|\s*number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
+        const match = text.match(invoiceRegex);
+        
+        if (match && match[1] && match[1].length > 2) {
+          cleaned = match[1].toUpperCase();
+        } else {
+          // Fallback: Longest alphanumeric string that contains at least one number
+          cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase();
+        }
         
         document.getElementById("inputInvoice").value = cleaned;
-        document.getElementById('msg-inv').innerHTML = `Invoice Number found: <b>${cleaned}</b>.<br>Please edit if necessary.`;
         
-        let readAloud = cleaned.split('').join(' ');
-        speakText("Invoice scan ho gaya hai. Number mila hai, " + readAloud + ". Agar sahi hai toh submit dabayein.");
+        if (cleaned && cleaned.length > 1) {
+          document.getElementById('msg-inv').innerHTML = `Invoice Number found: <b>${cleaned}</b>.<br>Please edit if necessary.`;
+          let readAloud = cleaned.split('').join(' ');
+          speakText("Invoice scan ho gaya hai. Number mila hai, " + readAloud + ". Agar sahi hai toh submit dabayein.");
+        } else {
+          document.getElementById('msg-inv').innerHTML = `Could not clearly identify Invoice Number.<br>Please type it manually.`;
+          speakText("Invoice number theek se padh nahi payi. Kripya type kar lijiye.");
+        }
 
       } catch (err) {
+        console.error("OCR Error:", err);
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
