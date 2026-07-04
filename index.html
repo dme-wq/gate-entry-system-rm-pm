@@ -468,13 +468,29 @@
       }
     }
 
+    let availableVoices = [];
+    window.speechSynthesis.onvoiceschanged = () => {
+      availableVoices = window.speechSynthesis.getVoices();
+    };
+
     function speakText(text) {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Cancel any ongoing speech
+        window.speechSynthesis.cancel(); 
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'hi-IN'; // Pronounce words in natural Hindi
-        u.pitch = 1.1; 
-        u.rate = 0.95;
+        u.lang = 'hi-IN'; 
+        u.pitch = 1.05; 
+        u.rate = 0.95; // Slightly slower for a calmer, human feel
+        
+        if (availableVoices.length === 0) {
+          availableVoices = window.speechSynthesis.getVoices();
+        }
+        
+        // Try to find the most premium, natural sounding Hindi voice available on the device
+        let bestVoice = availableVoices.find(v => v.lang === 'hi-IN' && (v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium')));
+        if (!bestVoice) bestVoice = availableVoices.find(v => v.lang.includes('hi'));
+        
+        if (bestVoice) u.voice = bestVoice;
+        
         window.speechSynthesis.speak(u);
       }
     }
@@ -538,7 +554,7 @@
       speechRecog.onstart = () => {
         icon.classList.add('listening');
         msg.innerHTML = "Listening... Please state the PO Number.";
-        speakText("Kripya Vendor P O number batayein.");
+        speakText("Aapka swagat hai. Kripya apna vendor P O number batayein.");
       };
       
       speechRecog.onresult = (event) => {
@@ -560,12 +576,12 @@
         
         if (!validatePO(fullPO)) {
           msg.innerHTML = `PO Number: <b>${fullPO}</b><br><span style="color:#e11d48;">Warning: PO not found. Please select manually.</span>`;
-          speakText("Maaf kijiye, yeh P O number list mein nahi mila. Kripya list mein se select karein.");
+          speakText("Lagta hai ye P O number galat hai. Kripya list mein se sahi P O number chun lijiye.");
           wrap.style.display = 'none';
           wrapSelect.style.display = 'block';
         } else {
           msg.innerHTML = `PO Number: <b>${fullPO}</b><br>Is this correct?`;
-          speakText("P O number " + cleanText + " prapt hua. Kripya pushti karein.");
+          speakText("P O number " + cleanText + " mila hai. Agar sahi hai toh kripya pushti karein.");
           wrap.style.display = 'block';
           wrapSelect.style.display = 'none';
         }
@@ -577,7 +593,7 @@
         wrapSelect.style.display = 'block';
         actions.style.setProperty('display', 'flex', 'important');
         msg.innerHTML = `Voice unclear (${event.error}). Please select from list.`;
-        speakText("Aawaz spasht nahi aayi. Kripya list se P O number select karein.");
+        speakText("Maaf kijiye main sun nahi payi. Kripya list se apna P O number chuniye.");
       };
       
       speechRecog.onend = () => { 
@@ -591,7 +607,7 @@
     function confirmPO() {
       const val = document.getElementById("inputPO").value.trim();
       if (!val) {
-        speakText("Kripya P O number darj karein.");
+        speakText("Aapne koi P O number nahi daala hai.");
         return Swal.fire('Error', 'Please enter a PO Number.', 'warning');
       }
       
@@ -599,7 +615,7 @@
       if (validVendorPOs.length > 0 && !validatePO(fullPO)) {
         document.getElementById("wrap-po").style.display = 'none';
         document.getElementById("wrap-select-po").style.display = 'block';
-        speakText("Kripya valid P O number select karein.");
+        speakText("Yeh ek galat P O number hai.");
         return Swal.fire('Invalid PO', 'The entered PO number does not exist in the database.', 'error');
       }
       
@@ -622,7 +638,7 @@
       speechRecog.onstart = () => {
         icon.classList.add('listening');
         msg.innerHTML = "Listening for Invoice Number...";
-        speakText("Kripya Invoice number batayein.");
+        speakText("Ab kripya apna Invoice number batayein.");
       };
       
       speechRecog.onresult = (event) => {
@@ -633,9 +649,8 @@
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         msg.innerHTML = `Invoice Number: <b>${text}</b>.<br>Please edit if necessary.`;
         
-        // Convert to space-separated characters for clear reading
         let readAloud = text.split('').join(' ');
-        speakText("Invoice number, " + readAloud + ", prapt hua. Kripya submit karein.");
+        speakText("Invoice number, " + readAloud + ", prapt hua hai. Kripya ise submit karein.");
       };
       
       speechRecog.onerror = (event) => {
@@ -643,7 +658,7 @@
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         document.getElementById('inv-actions').style.display = 'grid';
         msg.innerHTML = `Voice unclear (${event.error}). Please type manually.`;
-        speakText("Aawaz spasht nahi aayi. Kripya invoice number type karein.");
+        speakText("Main invoice number samajh nahi payi. Kripya type kijiye.");
       };
 
       speechRecog.onend = () => { icon.classList.remove('listening'); };
@@ -660,7 +675,7 @@
       
       container.style.display = 'block';
       msg.innerHTML = "Bring the invoice number into frame and press 'Capture Photo'.";
-      speakText("Kripya invoice ko camera ke saamne laayein.");
+      speakText("Kripya invoice ko camera ke theek saamne rakhein.");
 
       try {
         videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -707,7 +722,7 @@
     async function performOCR(base64) {
       document.getElementById('ocr-loader').style.display = 'block';
       document.getElementById('msg-inv').innerHTML = "Scanning invoice, please wait...";
-      speakText("A i, Invoice scan kar raha hai, kripya prateeksha karein.");
+      speakText("Main invoice scan kar rahi hoon, bas ek second.");
 
       try {
         if (!worker) await initTesseract();
@@ -723,14 +738,14 @@
         document.getElementById('msg-inv').innerHTML = `Invoice Number found: <b>${cleaned}</b>.<br>Please edit if necessary.`;
         
         let readAloud = cleaned.split('').join(' ');
-        speakText("Invoice scan poora hua. Number hai " + readAloud + ". Kripya submit karein.");
+        speakText("Invoice scan ho gaya hai. Number mila hai, " + readAloud + ". Agar sahi hai toh submit dabayein.");
 
       } catch (err) {
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         Swal.fire('Error', 'Failed to read invoice, please type manually.', 'warning');
-        speakText("Invoice scan fail ho gaya, kripya manually type karein.");
+        speakText("Maaf kijiye scan fail ho gaya, kripya ise manually type kar lijiye.");
       }
     }
 
@@ -745,20 +760,20 @@
       const email = document.getElementById("userName").value.trim() || "No Name";
 
       if (!poSuffix || !invoice) {
-        speakText("Kripya sabhi details darj karein.");
+        speakText("Kripya dono details bhar dijiye.");
         return Swal.fire('Error', 'Please enter all details.', 'error');
       }
       
       const fullPO = "RKD-25/" + poSuffix;
       if (validVendorPOs.length > 0 && !validatePO(fullPO)) {
-        speakText("Galat P O number. Kripya check karein.");
+        speakText("Aapka chuna hua P O number galat hai.");
         return Swal.fire('Invalid PO', 'The entered PO number does not exist in the database.', 'error');
       }
 
       const btn = document.getElementById("btn-submit");
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-      speakText("Data submit ho raha hai...");
+      speakText("Aapka data save kiya jaa raha hai.");
 
       const payload = { entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: email };
 
