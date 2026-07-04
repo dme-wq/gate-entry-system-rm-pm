@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
   
   <style>
     :root {
@@ -417,7 +416,6 @@
 
     let speechRecog = null;
     let videoStream = null;
-    let worker = null;
     let validVendorPOs = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
@@ -429,7 +427,6 @@
       const yyyy = today.getFullYear();
       document.getElementById("entryDateRaw").value = `${dd}-${MM}-${yyyy}`;
 
-      initTesseract();
       fetchVendorPOs(); // Loads in background for speed
       
       // Auto-activate microphone on page load to save time
@@ -455,10 +452,6 @@
           });
         }
       } catch (e) { console.error("Failed to fetch PO list", e); }
-    }
-
-    async function initTesseract() {
-      try { worker = await Tesseract.createWorker('eng'); } catch (e) {}
     }
 
     function initSpeechRecognition() {
@@ -663,8 +656,8 @@
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Limit to 1000px for strict mobile memory compliance
-      const maxDim = 1000;
+      // We can use higher resolution (1200px) because Cloud Vision AI handles the processing
+      const maxDim = 1200;
       let width = video.videoWidth, height = video.videoHeight;
       if (width > height) { 
         if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; } 
@@ -677,36 +670,30 @@
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
       
-      let imgData = ctx.getImageData(0, 0, width, height);
-      let data = imgData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        let brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-        data[i] = data[i+1] = data[i+2] = brightness;
-      }
-      ctx.putImageData(imgData, 0, 0);
-      
-      // Pass the canvas element directly to avoid huge Base64 memory allocation
-      performOCR(canvas);
+      // No need for manual grayscale. Cloud Vision handles contrast perfectly.
+      const base64 = canvas.toDataURL('image/jpeg', 0.9);
+      performOCR(base64);
     }
 
-    async function performOCR(imageSource) {
+    async function performOCR(base64) {
       document.getElementById('ocr-loader').style.display = 'block';
-      document.getElementById('msg-inv').innerHTML = "Initializing Smart Scanner...";
+      document.getElementById('msg-inv').innerHTML = "Cloud AI is scanning...";
 
       try {
-        if (!worker) {
-           // Tesseract v5 Syntax
-           worker = await Tesseract.createWorker('eng', 1, {
-             logger: m => {
-               if(m.status === 'recognizing text') {
-                 document.getElementById('msg-inv').innerHTML = `Extracting Text: ${Math.round(m.progress * 100)}%`;
-               }
-             }
-           });
+        const response = await fetch('/api/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64Image: base64 })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+           throw new Error(data.error || 'Server error during OCR');
         }
         
-        const { data: { text } } = await worker.recognize(imageSource);
-        console.log("Raw OCR: ", text);
+        const text = data.text;
+        console.log("Cloud Vision Raw OCR: ", text);
         
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
@@ -714,22 +701,22 @@
         
         let cleaned = "";
         
-        // Normalize text: remove spaces around dashes, slashes, and colons to fix OCR formatting issues
+        // Normalize text: remove spaces around dashes, slashes, and colons
         let normalizedText = text.replace(/\s*([:\-\/])\s*/g, '$1');
         
-        // 1. Fuzzy Keyword Search (catches 'Involce', 'Inv', 'Bill No', etc.)
+        // 1. Fuzzy Keyword Search
         const invoiceRegex = /(?:invo[il1]ce|inv|bill|memo|receipt)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
         const match = normalizedText.match(invoiceRegex);
         
         if (match && match[1] && match[1].length > 3) {
           cleaned = match[1].toUpperCase();
         } else {
-          // 2. Pattern Search: Looks for standard invoice formats (e.g., ABC-123/2025 or INV/2024/01)
+          // 2. Pattern Search
           let potentialMatches = normalizedText.match(/[a-zA-Z0-9]+[\-\/]\d+[\-\/]?\d*/g); 
           if (potentialMatches && potentialMatches[0].length > 4) { 
             cleaned = potentialMatches[0].toUpperCase(); 
           } else { 
-            // 3. Fallback: Longest word containing BOTH letters and numbers, OR a number longer than 4 digits.
+            // 3. Fallback
             let words = normalizedText.split(/\s+/);
             let bestWord = "";
             for (let word of words) {
@@ -747,10 +734,9 @@
           }
         }
         
-        // Remove trailing dashes or slashes
         cleaned = cleaned.replace(/[\-\/]$/, '');
-        
         document.getElementById("inputInvoice").value = cleaned;
+        
         if (cleaned && cleaned.length > 1) {
           document.getElementById('msg-inv').innerHTML = `Invoice: <b>${cleaned}</b>`;
         } else {
@@ -762,7 +748,7 @@
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         let errMsg = err.message || String(err);
-        Swal.fire('OCR Failed', 'Error: ' + errMsg + '. Please type manually.', 'warning');
+        Swal.fire('Cloud OCR Failed', 'Error: ' + errMsg + '. Please type manually.', 'warning');
       }
     }
 
