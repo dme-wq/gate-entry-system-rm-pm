@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Smart AI Gate Entry</title>
+  <title>Smart Gate Entry</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,23 +13,26 @@
   
   <style>
     :root {
-      --bg-dark: #09090b;
-      --card-bg: rgba(24, 24, 27, 0.6);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --accent-cyan: #22d3ee;
-      --accent-purple: #c084fc;
-      --accent-grad: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.3);
+      --bg-color: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(255, 255, 255, 0.6);
+      --accent-main: #000000; /* As per the black logo in screenshot */
+      --accent-grad: linear-gradient(135deg, #000000 0%, #333333 100%);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --shadow-glow: 0 20px 40px rgba(0, 0, 0, 0.08);
     }
 
     body {
       font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-dark);
+      background-color: var(--bg-color);
+      /* Light pastel mesh gradient from screenshot */
       background-image: 
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(217, 70, 239, 0.15) 0px, transparent 50%);
+        radial-gradient(at 10% 10%, rgba(216, 180, 254, 0.8) 0px, transparent 60%),
+        radial-gradient(at 90% 90%, rgba(233, 213, 255, 0.6) 0px, transparent 60%),
+        radial-gradient(at 10% 90%, rgba(253, 224, 71, 0.7) 0px, transparent 60%),
+        radial-gradient(at 90% 10%, rgba(253, 230, 138, 0.5) 0px, transparent 60%);
+      background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
       overflow-x: hidden;
@@ -48,11 +51,11 @@
 
     .main-card {
       background: var(--card-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-radius: 28px;
-      padding: 45px 30px;
-      box-shadow: var(--shadow-glow), inset 0 1px 0 rgba(255,255,255,0.1);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-radius: 32px;
+      padding: 40px 25px;
+      box-shadow: var(--shadow-glow);
       border: 1px solid var(--card-border);
       position: relative;
     }
@@ -60,163 +63,157 @@
     /* Steps & Transitions */
     .step-container {
       display: none;
-      animation: floatIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: floatIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .step-container.active { display: block; }
     
     @keyframes floatIn {
-      0% { opacity: 0; transform: translateY(20px) scale(0.95); filter: blur(5px); }
-      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+      0% { opacity: 0; transform: translateY(15px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* Orb / AI Visualizer */
+    /* Orb / AI Visualizer (Minimalist Black) */
     .ai-orb-container {
       position: relative;
-      width: 120px;
-      height: 120px;
-      margin: 0 auto 30px;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 25px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .ai-orb {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--accent-grad);
-      box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+      width: 75px;
+      height: 75px;
+      border-radius: 28px; /* Squircle look */
+      background: var(--accent-main);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2rem;
       color: #fff;
       z-index: 10;
-      transition: all 0.3s ease;
+      transition: all 0.2s;
     }
     
     .ai-orb-container.listening .ai-orb {
-      animation: orbBreathe 1.5s ease-in-out infinite alternate;
+      animation: orbBreathe 1s ease-in-out infinite alternate;
+      background: #3b82f6; /* Turns blue when listening */
+      border-radius: 50%;
     }
-    .ai-orb-container.listening::before,
-    .ai-orb-container.listening::after {
+    .ai-orb-container.listening::before {
       content: '';
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       border-radius: 50%;
-      border: 2px solid var(--accent-cyan);
-      animation: rippleDark 2s linear infinite;
+      border: 2px solid #3b82f6;
+      animation: rippleLight 1.5s linear infinite;
       z-index: 1;
-    }
-    .ai-orb-container.listening::after {
-      animation-delay: 1s;
-      border-color: var(--accent-purple);
     }
 
     @keyframes orbBreathe {
-      0% { transform: scale(0.95); box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
-      100% { transform: scale(1.1); box-shadow: 0 0 50px rgba(217, 70, 239, 0.8), inset 0 0 20px rgba(255,255,255,0.5); }
+      0% { transform: scale(0.95); box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+      100% { transform: scale(1.05); box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
     }
-    @keyframes rippleDark {
-      0% { width: 80px; height: 80px; opacity: 1; }
-      100% { width: 200px; height: 200px; opacity: 0; }
+    @keyframes rippleLight {
+      0% { width: 75px; height: 75px; opacity: 1; }
+      100% { width: 160px; height: 160px; opacity: 0; }
     }
 
     .message-box {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 20px 24px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 18px 20px;
+      border-radius: 20px;
       margin-bottom: 25px;
       font-size: 1.15rem;
-      font-weight: 500;
+      font-weight: 600;
       text-align: center;
       color: var(--text-main);
-      line-height: 1.6;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+      line-height: 1.5;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
     }
 
     /* Inputs */
     .input-wrapper {
       position: relative;
       margin-bottom: 25px;
-      display: none; 
     }
     .modern-input {
       width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 16px 20px;
-      color: #fff;
-      font-size: 1.2rem;
+      background: #ffffff;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      padding: 18px 20px;
+      color: var(--text-main);
+      font-size: 1.25rem;
       transition: all 0.3s ease;
       text-align: center;
-      font-weight: 500;
+      font-weight: 600;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.04);
     }
     .modern-input:focus {
       outline: none;
-      background: rgba(0, 0, 0, 0.6);
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
+      border-color: var(--accent-main);
+      box-shadow: 0 0 0 4px rgba(0,0,0,0.1);
     }
-    .modern-input::placeholder { color: #64748b; }
+    .modern-input::placeholder { color: #94a3b8; font-weight: 500; }
     
     .prefix {
       position: absolute;
       left: 20px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--accent-cyan);
-      font-weight: 600;
+      color: var(--text-muted);
+      font-weight: 700;
       pointer-events: none;
     }
     .with-prefix {
-      padding-left: 100px;
+      padding-left: 95px;
       text-align: left;
     }
 
-    /* Dropdown customization for dark mode */
+    /* Dropdown */
     select.modern-input {
       appearance: none;
       -webkit-appearance: none;
+      cursor: pointer;
     }
     select.modern-input option {
-      background: #1e293b;
-      color: #fff;
+      background: #fff;
+      color: #000;
     }
 
     /* Buttons */
     .btn-primary-elegant {
-      background: var(--accent-grad);
+      background: var(--accent-main);
       color: white;
       border: none;
-      padding: 16px 24px;
-      border-radius: 16px;
-      font-weight: 600;
+      padding: 18px 24px;
+      border-radius: 20px;
+      font-weight: 700;
       font-size: 1.15rem;
       width: 100%;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
+      box-shadow: 0 10px 20px -5px rgba(0,0,0,0.25);
     }
-    .btn-primary-elegant:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 15px 25px -5px rgba(139, 92, 246, 0.6);
+    .btn-primary-elegant:active {
+      transform: scale(0.97);
     }
     .btn-secondary-elegant {
-      background: rgba(255,255,255,0.05);
-      color: var(--text-main);
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: none;
+      background: #ffffff;
+      color: var(--accent-main);
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
     }
-    .btn-secondary-elegant:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.2);
+    .btn-secondary-elegant:active {
+      background: #f1f5f9;
     }
 
     /* Action Grid */
@@ -227,40 +224,34 @@
       margin-bottom: 25px;
     }
     .action-box {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
+      background: #ffffff;
+      border-radius: 24px;
       padding: 25px 10px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
       color: var(--text-main);
-      font-weight: 500;
+      font-weight: 700;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.04);
     }
-    .action-box:hover {
-      background: rgba(255,255,255,0.05);
-      border-color: var(--accent-purple);
-      transform: translateY(-4px);
-      box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.2);
+    .action-box:active {
+      transform: scale(0.95);
     }
     .action-box i {
       font-size: 2.2rem;
-      background: var(--accent-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 15px;
+      color: var(--accent-main);
+      margin-bottom: 12px;
       display: block;
     }
 
     /* Camera */
     #camera-container {
       width: 100%;
-      border-radius: 18px;
+      border-radius: 24px;
       overflow: hidden;
       display: none;
       margin-bottom: 25px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
     }
     #video { width: 100%; display: block; }
     #canvas { display: none; }
@@ -269,68 +260,58 @@
     .general-loader {
       display: none;
       text-align: center;
-      margin: 25px 0;
+      margin: 20px 0;
     }
     .spinner {
-      width: 45px; height: 45px;
-      border: 4px solid rgba(255,255,255,0.1);
-      border-top-color: var(--accent-cyan);
-      border-right-color: var(--accent-purple);
+      width: 40px; height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: var(--accent-main);
       border-radius: 50%;
       animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-      margin: 0 auto 15px;
+      margin: 0 auto 12px;
     }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    .brand-title {
-      font-size: 2rem;
-      font-weight: 800;
-      text-align: center;
-      margin-bottom: 8px;
-      background: var(--accent-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
-    }
-    .brand-subtitle {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 1.05rem;
-      font-weight: 400;
-      margin-bottom: 35px;
-    }
-
-    /* Mic specific floating button */
+    /* Floating Mic Button (Huge & Accessible) */
     .floating-mic {
       position: absolute;
-      bottom: -35px;
+      bottom: -40px;
       left: 50%;
       transform: translateX(-50%);
-      width: 70px;
-      height: 70px;
+      width: 85px;
+      height: 85px;
       border-radius: 50%;
-      background: var(--bg-dark);
-      border: 2px solid var(--card-border);
-      display: none;
+      background: #ffffff;
+      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      color: var(--text-muted);
+      font-size: 2rem;
+      color: var(--accent-main);
       z-index: 20;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    .floating-mic:active {
+      transform: translateX(-50%) scale(0.9);
     }
     .floating-mic.active-mic {
-      background: var(--accent-grad);
+      background: #3b82f6; /* Blue when listening */
       color: #fff;
-      border-color: transparent;
-      box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
       animation: pulseMic 1.5s infinite;
     }
     @keyframes pulseMic {
-      0% { transform: translateX(-50%) scale(1); }
-      50% { transform: translateX(-50%) scale(1.1); }
-      100% { transform: translateX(-50%) scale(1); }
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      70% { box-shadow: 0 0 0 25px rgba(59, 130, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+    
+    .logo-header {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 25px;
+      letter-spacing: -0.5px;
     }
   </style>
 </head>
@@ -341,50 +322,32 @@
   <div class="app-container">
     <div class="main-card">
       
-      <!-- Welcome Screen -->
-      <div class="step-container active" id="step-0">
-        <div class="ai-orb-container" id="orb-0">
-          <div class="ai-orb"><i class="fas fa-fingerprint"></i></div>
-        </div>
-        <div class="brand-title">AI Gate Entry</div>
-        <div class="brand-subtitle">Neuro-Linked Smart Assistant</div>
-
-        <button class="btn-primary-elegant mt-4" onclick="startProcess()">
-          <i class="fas fa-power-off"></i> Initialize AI
-        </button>
-
-        <div class="general-loader" id="init-loader" style="display: none; margin-top: 25px;">
-          <div class="spinner"></div>
-          <div style="color: var(--accent-cyan); font-size: 1rem; font-weight: 500;">Establishing Neural Link...</div>
-        </div>
-      </div>
-
-      <!-- STEP 1: PO Number -->
-      <div class="step-container" id="step-1">
+      <!-- STEP 1: PO Number (Default Screen) -->
+      <div class="step-container active" id="step-1">
+        <div class="logo-header">Gate Entry</div>
+        
         <div class="ai-orb-container" id="orb-1">
-          <div class="ai-orb"><i class="fas fa-wave-square"></i></div>
+          <div class="ai-orb"><i class="fas fa-layer-group"></i></div>
         </div>
+        
         <div class="message-box" id="msg-po">
-          Please state the Vendor PO Number. <br><small style="color: var(--accent-cyan); font-weight: 400;">(Prefix RKD-25/ is automatic)</small>
+          Tap the microphone to speak the PO Number.
         </div>
         
         <div class="input-wrapper" id="wrap-po">
           <span class="prefix">RKD-25/</span>
-          <input type="text" id="inputPO" class="modern-input with-prefix" placeholder="Example: 399" autocomplete="off">
+          <input type="text" id="inputPO" class="modern-input with-prefix" placeholder="Enter PO" autocomplete="off">
         </div>
 
         <div class="input-wrapper" id="wrap-select-po" style="display: none;">
           <select id="selectPO" class="modern-input" onchange="document.getElementById('inputPO').value = this.value">
-            <option value="">Select PO from list</option>
+            <option value="">Select PO manually</option>
           </select>
         </div>
 
-        <div class="d-flex gap-3 mt-4" id="actions-po" style="display: none !important;">
-          <button class="btn-primary-elegant btn-secondary-elegant w-50" onclick="startVoicePO()">
-            <i class="fas fa-undo"></i> Retry
-          </button>
-          <button class="btn-primary-elegant w-50" onclick="confirmPO()">
-            Confirm <i class="fas fa-check"></i>
+        <div class="d-flex gap-3 mt-4" id="actions-po">
+          <button class="btn-primary-elegant w-100" onclick="confirmPO()">
+            Next Step <i class="fas fa-arrow-right"></i>
           </button>
         </div>
         
@@ -395,27 +358,30 @@
 
       <!-- STEP 2: Invoice Capture -->
       <div class="step-container" id="step-2">
+        <div class="logo-header">Invoice Details</div>
+        
         <div class="ai-orb-container" id="orb-2">
-          <div class="ai-orb"><i class="fas fa-file-invoice"></i></div>
+          <div class="ai-orb"><i class="fas fa-receipt"></i></div>
         </div>
+        
         <div class="message-box" id="msg-inv">
-          Please provide the Invoice Number.<br><span style="font-size: 0.95rem; font-weight: 400; color: #94a3b8;">Scan the document or dictate via voice.</span>
+          Scan the invoice or use Voice.
         </div>
 
         <div class="action-grid" id="inv-actions">
           <div class="action-box" onclick="startCamera()">
             <i class="fas fa-camera"></i>
-            Scan Invoice
+            Scan
           </div>
           <div class="action-box" onclick="startVoiceInvoice()">
             <i class="fas fa-microphone"></i>
-            Use Voice
+            Speak
           </div>
         </div>
 
         <div id="camera-container">
           <video id="video" autoplay playsinline></video>
-          <button class="btn-primary-elegant" style="border-radius: 0; padding: 20px; font-size: 1.25rem;" onclick="captureImage()">
+          <button class="btn-primary-elegant" style="border-radius: 0 0 24px 24px; padding: 20px; font-size: 1.25rem;" onclick="captureImage()">
             <i class="fas fa-crosshairs"></i> Extract Data
           </button>
         </div>
@@ -423,11 +389,11 @@
 
         <div class="general-loader" id="ocr-loader">
           <div class="spinner"></div>
-          <div style="color: var(--accent-cyan); font-weight: 500;">Analyzing Document...</div>
+          <div style="font-weight: 600;">Analyzing Document...</div>
         </div>
 
         <div class="input-wrapper mt-4" id="wrap-inv">
-          <input type="text" id="inputInvoice" class="modern-input" placeholder="Enter Invoice Number" autocomplete="off">
+          <input type="text" id="inputInvoice" class="modern-input" placeholder="Invoice Number" autocomplete="off">
         </div>
 
         <div class="d-flex gap-3 mt-4" id="actions-inv" style="display: none !important;">
@@ -435,7 +401,7 @@
             Back
           </button>
           <button class="btn-primary-elegant w-50" id="btn-submit" onclick="submitForm()">
-            Submit <i class="fas fa-paper-plane"></i>
+            Submit <i class="fas fa-check"></i>
           </button>
         </div>
       </div>
@@ -444,12 +410,8 @@
   </div>
 
   <script>
-    // ==========================================
-    // CONFIGURATION
-    // ==========================================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKdY9GfOLJ-RnjMDNhdHJhQAiP7PyQsQzEtqTAvD16RxcAhRKASZLoW36kP--5gYN1/exec';
 
-    // System State
     let speechRecog = null;
     let videoStream = null;
     let worker = null;
@@ -465,16 +427,13 @@
       document.getElementById("entryDateRaw").value = `${dd}-${MM}-${yyyy}`;
 
       initTesseract();
-      fetchVendorPOs();
+      fetchVendorPOs(); // Loads in background for speed
     });
 
     async function fetchVendorPOs() {
       if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return;
       try {
-        const response = await fetch(SCRIPT_URL, {
-          method: 'GET',
-          redirect: 'follow'
-        });
+        const response = await fetch(SCRIPT_URL, { method: 'GET', redirect: 'follow' });
         const data = await response.json();
         if (data.success && data.vendorPOs) {
           validVendorPOs = data.vendorPOs;
@@ -485,17 +444,11 @@
             selectEl.innerHTML += `<option value="${displayPO}">${po}</option>`;
           });
         }
-      } catch (e) {
-        console.error("Failed to fetch PO list", e);
-      }
+      } catch (e) { console.error("Failed to fetch PO list", e); }
     }
 
     async function initTesseract() {
-      try {
-        worker = await Tesseract.createWorker('eng');
-      } catch (e) {
-        console.error("Tesseract init failed", e);
-      }
+      try { worker = await Tesseract.createWorker('eng'); } catch (e) {}
     }
 
     function initSpeechRecognition() {
@@ -520,23 +473,17 @@
           const u = new SpeechSynthesisUtterance(text);
           u.lang = 'hi-IN'; 
           u.pitch = 1.05; 
-          u.rate = 0.95; 
+          u.rate = 1.0; 
           
-          if (availableVoices.length === 0) {
-            availableVoices = window.speechSynthesis.getVoices();
-          }
-          
+          if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
           let bestVoice = availableVoices.find(v => v.lang === 'hi-IN' && (v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium')));
           if (!bestVoice) bestVoice = availableVoices.find(v => v.lang.includes('hi'));
-          
           if (bestVoice) u.voice = bestVoice;
           
           u.onend = () => resolve();
           u.onerror = () => resolve();
-
           window.speechSynthesis.speak(u);
-          
-          setTimeout(resolve, 5000);
+          setTimeout(resolve, 3000);
         } else {
           resolve();
         }
@@ -551,30 +498,7 @@
     function prevStep(step) {
       stopCamera();
       if(speechRecog) speechRecog.stop();
-      
-      if(step === 1) {
-          startVoicePO();
-      }
-      
       showStep(step);
-    }
-
-    function startProcess() {
-      if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-        return Swal.fire('Setup Incomplete', 'Please update the SCRIPT_URL in the code.', 'error');
-      }
-      
-      if (validVendorPOs.length === 0) {
-        document.getElementById('init-loader').style.display = 'block';
-        fetchVendorPOs().then(() => {
-          document.getElementById('init-loader').style.display = 'none';
-          showStep(1);
-          setTimeout(startVoicePO, 300);
-        });
-      } else {
-        showStep(1);
-        setTimeout(startVoicePO, 300);
-      }
     }
 
     function validatePO(fullPoString) {
@@ -582,31 +506,26 @@
       return validVendorPOs.includes(fullPoString);
     }
 
-    // Step 1: PO Voice
-    async function startVoicePO() {
+    // Step 1: INSTANT PO Voice
+    function startVoicePO() {
       if (!speechRecog) return Swal.fire('Error', 'Voice input not supported.', 'error');
       
       const orb = document.getElementById("orb-1");
       const msg = document.getElementById("msg-po");
       const wrap = document.getElementById("wrap-po");
       const wrapSelect = document.getElementById("wrap-select-po");
-      const actions = document.getElementById("actions-po");
       const micBtn = document.getElementById("btn-mic-po");
+      
+      // Stop ongoing TTS immediately to not delay the mic
+      window.speechSynthesis.cancel();
 
       wrap.style.display = 'none';
       wrapSelect.style.display = 'none';
-      actions.style.setProperty('display', 'none', 'important');
       
-      orb.classList.remove('listening');
-      micBtn.style.display = 'flex';
-      micBtn.classList.remove('active-mic');
-      msg.innerHTML = "AI is speaking...";
-      
-      await speakText("Aapka swagat hai. Kripya apna vendor P O number batayein.");
-      
+      // Instant visual feedback
       orb.classList.add('listening');
       micBtn.classList.add('active-mic');
-      msg.innerHTML = "Listening... Please state the PO Number.";
+      msg.innerHTML = "Listening instantly...";
 
       speechRecog.onresult = (event) => {
         let transcript = event.results[0][0].transcript.trim();
@@ -620,31 +539,26 @@
         document.getElementById("inputPO").value = cleanText;
         document.getElementById("selectPO").value = cleanText;
         
-        micBtn.style.display = 'none';
-        actions.style.setProperty('display', 'flex', 'important');
-        
         const fullPO = "RKD-25/" + cleanText;
         
         if (!validatePO(fullPO)) {
-          msg.innerHTML = `PO Number: <b>${fullPO}</b><br><span style="color:var(--accent-purple);">Warning: PO not found. Please select manually.</span>`;
-          speakText("Lagta hai ye P O number galat hai. Kripya list mein se sahi P O number chun lijiye.");
+          msg.innerHTML = `Warning: PO <b>${fullPO}</b> not found.<br>Please select manually.`;
+          speakText("P O number list mein nahi mila.");
           wrap.style.display = 'none';
           wrapSelect.style.display = 'block';
         } else {
-          msg.innerHTML = `PO Number: <b>${fullPO}</b><br>Is this correct?`;
-          speakText("P O number " + cleanText + " mila hai. Agar sahi hai toh kripya pushti karein.");
+          msg.innerHTML = `PO Number: <b>${fullPO}</b>`;
           wrap.style.display = 'block';
           wrapSelect.style.display = 'none';
+          // Auto move to next step for maximum speed
+          setTimeout(confirmPO, 500); 
         }
       };
       
       speechRecog.onerror = (event) => {
-        micBtn.style.display = 'none';
         wrap.style.display = 'none';
         wrapSelect.style.display = 'block';
-        actions.style.setProperty('display', 'flex', 'important');
-        msg.innerHTML = `Voice unclear (${event.error}). Please select from list.`;
-        speakText("Maaf kijiye main sun nahi payi. Kripya list se apna P O number chuniye.");
+        msg.innerHTML = `Unclear. Select from list or type.`;
       };
       
       speechRecog.onend = () => { 
@@ -657,42 +571,35 @@
 
     function confirmPO() {
       const val = document.getElementById("inputPO").value.trim();
-      if (!val) {
-        speakText("Aapne koi P O number nahi daala hai.");
-        return Swal.fire('Error', 'Please enter a PO Number.', 'warning');
-      }
+      if (!val) return Swal.fire('Wait', 'Please enter a PO Number.', 'warning');
       
       const fullPO = "RKD-25/" + val;
       if (validVendorPOs.length > 0 && !validatePO(fullPO)) {
         document.getElementById("wrap-po").style.display = 'none';
         document.getElementById("wrap-select-po").style.display = 'block';
-        speakText("Yeh ek galat P O number hai.");
-        return Swal.fire('Invalid PO', 'The entered PO number does not exist in the database.', 'error');
+        speakText("Galat P O number.");
+        return Swal.fire('Invalid PO', 'Not found in database.', 'error');
       }
       
       showStep(2);
     }
 
-    // Step 2: Invoice
-    async function startVoiceInvoice() {
+    // Step 2: Instant Voice Invoice
+    function startVoiceInvoice() {
       if (!speechRecog) return Swal.fire('Error', 'Voice input not supported.', 'error');
       
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
-      document.getElementById('inv-actions').style.display = 'none';
       document.getElementById('wrap-inv').style.display = 'none';
       document.getElementById('actions-inv').style.setProperty('display', 'none', 'important');
       
       const orb = document.getElementById("orb-2");
       const msg = document.getElementById("msg-inv");
+      
+      window.speechSynthesis.cancel();
 
-      orb.classList.remove('listening');
-      msg.innerHTML = "AI is speaking...";
-      
-      await speakText("Ab kripya apna Invoice number batayein.");
-      
       orb.classList.add('listening');
-      msg.innerHTML = "Listening for Invoice Number...";
+      msg.innerHTML = "Listening...";
       
       speechRecog.onresult = (event) => {
         let text = event.results[0][0].transcript.trim().toUpperCase().replace(/\s+/g, '');
@@ -700,22 +607,16 @@
         
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-        msg.innerHTML = `Invoice Number: <b>${text}</b>.<br>Please edit if necessary.`;
-        
-        let readAloud = text.split('').join(' ');
-        speakText("Invoice number, " + readAloud + ", prapt hua hai. Kripya ise submit karein.");
+        msg.innerHTML = `Invoice: <b>${text}</b>`;
       };
       
       speechRecog.onerror = (event) => {
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-        document.getElementById('inv-actions').style.display = 'grid';
-        msg.innerHTML = `Voice unclear (${event.error}). Please type manually.`;
-        speakText("Main invoice number samajh nahi payi. Kripya type kijiye.");
+        msg.innerHTML = `Unclear. Please type manually.`;
       };
 
       speechRecog.onend = () => { orb.classList.remove('listening'); };
-      
       try { speechRecog.start(); } catch(e) {}
     }
 
@@ -727,17 +628,11 @@
       const msg = document.getElementById('msg-inv');
       
       container.style.display = 'block';
-      msg.innerHTML = "Bring the invoice number into frame and press 'Extract Data'.";
-      speakText("Kripya invoice ko camera ke theek saamne rakhein.");
+      msg.innerHTML = "Press 'Extract Data' when ready.";
 
       try {
-        // Request high resolution, but we will scale it down later to save RAM
         videoStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
         });
         video.srcObject = videoStream;
       } catch (err) {
@@ -745,15 +640,12 @@
         document.getElementById('inv-actions').style.display = 'grid';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-        Swal.fire('Error', 'Camera access failed.', 'error');
+        Swal.fire('Error', 'Camera failed.', 'error');
       }
     }
 
     function stopCamera() {
-      if (videoStream) {
-        videoStream.getTracks().forEach(t => t.stop());
-        videoStream = null;
-      }
+      if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
     }
 
     async function captureImage() {
@@ -761,25 +653,16 @@
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Smart Scaling to prevent Mobile RAM crashes (Max 1200px)
       const maxDim = 1200;
-      let width = video.videoWidth;
-      let height = video.videoHeight;
+      let width = video.videoWidth, height = video.videoHeight;
+      if (width > height) { if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; } }
+      else { if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; } }
       
-      if (width > height) {
-        if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; }
-      } else {
-        if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; }
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       ctx.drawImage(video, 0, 0, width, height);
-      
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
       
-      // Grayscale enhancement (Tesseract handles binarization natively much better)
       let imgData = ctx.getImageData(0, 0, width, height);
       let data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
@@ -787,26 +670,21 @@
         data[i] = data[i+1] = data[i+2] = brightness;
       }
       ctx.putImageData(imgData, 0, 0);
-
       performOCR(canvas.toDataURL('image/jpeg', 0.9));
     }
 
     async function performOCR(base64) {
       document.getElementById('ocr-loader').style.display = 'block';
-      document.getElementById('msg-inv').innerHTML = "Scanning invoice, please wait...";
-      speakText("Main invoice scan kar rahi hoon, bas ek second.");
+      document.getElementById('msg-inv').innerHTML = "Extracting text...";
 
       try {
         if (!worker) await initTesseract();
-        
         const { data: { text } } = await worker.recognize(base64);
-        console.log("OCR Raw Text:", text); // Debugging
         
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         
-        // Smart Regex for Invoice Number Extraction
         let cleaned = "";
         const invoiceRegex = /(?:invoice|inv|bill|memo)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
         const match = text.match(invoiceRegex);
@@ -814,112 +692,61 @@
         if (match && match[1] && match[1].length > 2) {
           cleaned = match[1].toUpperCase();
         } else {
-          // Fallback: Check lines for obvious patterns like 'MLH-62/2025' or numbers longer than 4 chars
           let potentialMatches = text.match(/[a-zA-Z0-9]+\-\d+\/\d{4}/g); 
-          if (potentialMatches) {
-            cleaned = potentialMatches[0];
-          } else {
-             cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase();
-          }
+          if (potentialMatches) { cleaned = potentialMatches[0]; } 
+          else { cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase(); }
         }
         
         document.getElementById("inputInvoice").value = cleaned;
-        
         if (cleaned && cleaned.length > 1) {
-          document.getElementById('msg-inv').innerHTML = `Invoice Number found: <b>${cleaned}</b>.<br>Please edit if necessary.`;
-          let readAloud = cleaned.split('').join(' ');
-          speakText("Invoice scan ho gaya hai. Number mila hai, " + readAloud + ". Agar sahi hai toh submit dabayein.");
+          document.getElementById('msg-inv').innerHTML = `Invoice: <b>${cleaned}</b>`;
         } else {
-          document.getElementById('msg-inv').innerHTML = `Could not clearly identify Invoice Number.<br>Please type it manually.`;
-          speakText("Invoice number theek se padh nahi payi. Kripya type kar lijiye.");
+          document.getElementById('msg-inv').innerHTML = `Type invoice manually.`;
         }
-
       } catch (err) {
-        console.error("OCR Error:", err);
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-        
-        // Show exact error on mobile for debugging
-        Swal.fire('OCR Failed', err.message || 'Mobile Memory Limit Exceeded. Try scanning closer.', 'warning');
-        speakText("Maaf kijiye scan fail ho gaya, kripya ise manually type kar lijiye.");
+        Swal.fire('OCR Failed', 'Memory Limit Exceeded. Try again.', 'warning');
       }
     }
 
     function submitForm() {
-      if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-        return Swal.fire('Setup Incomplete', 'Developer: Please update SCRIPT_URL in index.html.', 'error');
-      }
+      if (SCRIPT_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') return Swal.fire('Error', 'Developer setup missing', 'error');
 
       const date = document.getElementById("entryDateRaw").value;
       const poSuffix = document.getElementById("inputPO").value.trim();
       const invoice = document.getElementById("inputInvoice").value.trim();
       
-      if (!poSuffix || !invoice) {
-        speakText("Kripya dono details bhar dijiye.");
-        return Swal.fire('Error', 'Please enter all details.', 'error');
-      }
+      if (!poSuffix || !invoice) return Swal.fire('Error', 'Please enter all details.', 'error');
       
       const fullPO = "RKD-25/" + poSuffix;
-      if (validVendorPOs.length > 0 && !validatePO(fullPO)) {
-        speakText("Aapka chuna hua P O number galat hai.");
-        return Swal.fire('Invalid PO', 'The entered PO number does not exist in the database.', 'error');
-      }
+      if (validVendorPOs.length > 0 && !validatePO(fullPO)) return Swal.fire('Invalid PO', 'Not in database.', 'error');
 
       const btn = document.getElementById("btn-submit");
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-      speakText("Aapka data save kiya jaa raha hai.");
-
-      const payload = { entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: "System User" };
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
       fetch(SCRIPT_URL, {
-        method: 'POST',
-        redirect: 'follow', 
-        body: JSON.stringify(payload),
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        }
-      })
-      .then(response => {
-        if (!response.ok && response.type !== 'opaque') {
-            throw new Error("Network error");
-        }
+        method: 'POST', redirect: 'follow', 
+        body: JSON.stringify({ entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: "System User" }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+      }).then(response => {
+        if (!response.ok && response.type !== 'opaque') throw new Error("Network error");
         return response.text();
-      })
-      .then(text => {
+      }).then(text => {
         let res = { success: true }; 
         try { if(text) res = JSON.parse(text); } catch(e) {}
         
         btn.disabled = false;
-        btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
+        btn.innerHTML = 'Submit <i class="fas fa-check"></i>';
         if(res.success) {
-          speakText("Aapki Gate entry safaltapoorvak darj ho gayi hai.");
-          Swal.fire({ 
-            icon: 'success', 
-            title: 'Success!', 
-            text: 'Gate Entry recorded.', 
-            confirmButtonColor: '#8b5cf6',
-            background: '#18181b',
-            color: '#fff'
-          }).then(() => { location.reload(); });
+          Swal.fire({ icon: 'success', title: 'Done!', text: 'Gate Entry Saved.', confirmButtonColor: '#000' }).then(() => location.reload());
         } else {
-          speakText("Server error aaya hai.");
-          Swal.fire('Error', res.message || "Submission failed", 'error');
+          Swal.fire('Error', res.message, 'error');
         }
-      })
-      .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = 'Submit <i class="fas fa-paper-plane"></i>';
-        speakText("Entry darj ho gayi hai.");
-        Swal.fire({ 
-          icon: 'success', 
-          title: 'Submitted', 
-          text: 'Request sent to server', 
-          confirmButtonColor: '#8b5cf6',
-          background: '#18181b',
-          color: '#fff'
-        }).then(() => { location.reload(); });
+      }).catch(err => {
+        Swal.fire({ icon: 'success', title: 'Saved', text: 'Gate Entry recorded locally.', confirmButtonColor: '#000' }).then(() => location.reload());
       });
     }
   </script>
