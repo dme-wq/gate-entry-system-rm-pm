@@ -731,7 +731,7 @@
       speakText("Kripya invoice ko camera ke theek saamne rakhein.");
 
       try {
-        // Request high resolution for better OCR accuracy
+        // Request high resolution, but we will scale it down later to save RAM
         videoStream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
@@ -761,27 +761,34 @@
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
       
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Smart Scaling to prevent Mobile RAM crashes (Max 1200px)
+      const maxDim = 1200;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      
+      if (width > height) {
+        if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+      } else {
+        if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(video, 0, 0, width, height);
       
       stopCamera();
       document.getElementById('camera-container').style.display = 'none';
       
-      // Advanced Image Preprocessing for better OCR (Grayscale + High Contrast/Binarization)
-      let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      // Grayscale enhancement (Tesseract handles binarization natively much better)
+      let imgData = ctx.getImageData(0, 0, width, height);
       let data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
-        // Grayscale
         let brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-        // Binarization (Threshold) to make text black and background white
-        let threshold = 140; 
-        let color = brightness > threshold ? 255 : 0;
-        data[i] = data[i+1] = data[i+2] = color;
+        data[i] = data[i+1] = data[i+2] = brightness;
       }
       ctx.putImageData(imgData, 0, 0);
 
-      performOCR(canvas.toDataURL('image/jpeg'));
+      performOCR(canvas.toDataURL('image/jpeg', 0.9));
     }
 
     async function performOCR(base64) {
@@ -792,7 +799,6 @@
       try {
         if (!worker) await initTesseract();
         
-        // Ensure worker is fully ready if createWorker didn't fail
         const { data: { text } } = await worker.recognize(base64);
         console.log("OCR Raw Text:", text); // Debugging
         
@@ -802,14 +808,19 @@
         
         // Smart Regex for Invoice Number Extraction
         let cleaned = "";
-        const invoiceRegex = /(?:invoice|inv|bill|memo)(?:\s*no\.?|\s*number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
+        const invoiceRegex = /(?:invoice|inv|bill|memo)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
         const match = text.match(invoiceRegex);
         
         if (match && match[1] && match[1].length > 2) {
           cleaned = match[1].toUpperCase();
         } else {
-          // Fallback: Longest alphanumeric string that contains at least one number
-          cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase();
+          // Fallback: Check lines for obvious patterns like 'MLH-62/2025' or numbers longer than 4 chars
+          let potentialMatches = text.match(/[a-zA-Z0-9]+\-\d+\/\d{4}/g); 
+          if (potentialMatches) {
+            cleaned = potentialMatches[0];
+          } else {
+             cleaned = text.split(/\s+/).reduce((a, b) => (/\d/.test(b) && b.length > a.length) ? b : a, "").replace(/[^a-zA-Z0-9\-\/]/g, '').toUpperCase();
+          }
         }
         
         document.getElementById("inputInvoice").value = cleaned;
@@ -828,7 +839,9 @@
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
-        Swal.fire('Error', 'Failed to read invoice, please type manually.', 'warning');
+        
+        // Show exact error on mobile for debugging
+        Swal.fire('OCR Failed', err.message || 'Mobile Memory Limit Exceeded. Try scanning closer.', 'warning');
         speakText("Maaf kijiye scan fail ho gaya, kripya ise manually type kar lijiye.");
       }
     }
