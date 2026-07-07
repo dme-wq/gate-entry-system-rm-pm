@@ -418,6 +418,7 @@
     let speechRecog = null;
     let videoStream = null;
     let validVendorPOs = [];
+    let lastCapturedBase64 = null; // Store invoice image for Drive upload on submit
 
     document.addEventListener("DOMContentLoaded", async () => {
       initSpeechRecognition();
@@ -673,6 +674,8 @@
       
       // No need for manual grayscale. Cloud Vision handles contrast perfectly.
       const base64 = canvas.toDataURL('image/jpeg', 0.9);
+      // Store base64 for later Drive upload on submit
+      lastCapturedBase64 = base64;
       performOCR(base64);
     }
 
@@ -737,7 +740,13 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST', redirect: 'follow', 
-        body: JSON.stringify({ entryDate: date, vendorPO: fullPO, invoiceNumber: invoice, email: "System User" }),
+        body: JSON.stringify({ 
+          entryDate: date, 
+          vendorPO: fullPO, 
+          invoiceNumber: invoice, 
+          email: "System User",
+          base64Image: lastCapturedBase64 || null  // Send image for Drive upload
+        }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
       }).then(response => {
         if (!response.ok && response.type !== 'opaque') throw new Error("Network error");
