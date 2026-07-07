@@ -313,6 +313,16 @@
       margin-bottom: 25px;
       letter-spacing: -0.5px;
     }
+
+    /* Hindi subtitle below English headers */
+    .hindi-sub {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0;
+      margin-top: 4px;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -327,7 +337,10 @@
         <div style="text-align: center; margin-bottom: 10px;">
           <img src="https://static.wixstatic.com/media/68b92a_d71e34133826499983234774dea1945b~mv2.png/v1/fill/w_93,h_78,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/RKD-Logo.png" alt="RKD Logo" style="height: 60px;">
         </div>
-        <div class="logo-header" style="margin-bottom: 15px;">RM/PM Gate Entry</div>
+        <div class="logo-header" style="margin-bottom: 15px;">
+          RM/PM Gate Entry
+          <span class="hindi-sub">कच्चा माल / पैकेजिंग सामग्री गेट प्रवेश</span>
+        </div>
         
         <div class="ai-orb-container" id="orb-1">
           <div class="ai-orb"><i class="fas fa-layer-group"></i></div>
@@ -361,7 +374,10 @@
 
       <!-- STEP 2: Invoice Capture -->
       <div class="step-container" id="step-2">
-        <div class="logo-header">Invoice Details</div>
+        <div class="logo-header">
+          Invoice Details
+          <span class="hindi-sub">चालान की जानकारी</span>
+        </div>
         
         <div class="ai-orb-container" id="orb-2">
           <div class="ai-orb"><i class="fas fa-receipt"></i></div>
@@ -375,10 +391,12 @@
           <div class="action-box" onclick="startCamera()">
             <i class="fas fa-camera"></i>
             Scan
+            <span class="hindi-sub">स्कैन करें</span>
           </div>
           <div class="action-box" onclick="startVoiceInvoice()">
             <i class="fas fa-microphone"></i>
             Speak
+            <span class="hindi-sub">बोलकर दर्ज करें</span>
           </div>
         </div>
 
@@ -392,19 +410,19 @@
 
         <div class="general-loader" id="ocr-loader">
           <div class="spinner"></div>
-          <div style="font-weight: 600;">Analyzing Document...</div>
+          <div style="font-weight: 600;">Analyzing Document... <span class="hindi-sub" style="display:inline-block;">दस्तावेज़ पढ़ा जा रहा है...</span></div>
         </div>
 
         <div class="input-wrapper mt-4" id="wrap-inv">
-          <input type="text" id="inputInvoice" class="modern-input" placeholder="Invoice Number" autocomplete="off">
+          <input type="text" id="inputInvoice" class="modern-input" placeholder="Invoice Number | चालान नंबर" autocomplete="off">
         </div>
 
         <div class="d-flex gap-3 mt-4" id="actions-inv">
           <button class="btn-primary-elegant btn-secondary-elegant w-50" onclick="prevStep(1)">
-            Back
+            Back <span class="hindi-sub" style="color:inherit;">वापस जाएं</span>
           </button>
           <button class="btn-primary-elegant w-50" id="btn-submit" onclick="submitForm()">
-            Submit <i class="fas fa-check"></i>
+            Submit <i class="fas fa-check"></i><span class="hindi-sub" style="color:inherit;">जमा करें</span>
           </button>
         </div>
       </div>
