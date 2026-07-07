@@ -677,7 +677,7 @@
 
     async function performOCR(base64) {
       document.getElementById('ocr-loader').style.display = 'block';
-      document.getElementById('msg-inv').innerHTML = "Cloud AI is scanning...";
+      document.getElementById('msg-inv').innerHTML = "Gemini AI is reading invoice...";
 
       try {
         const response = await fetch('/api/ocr', {
@@ -692,63 +692,29 @@
            throw new Error(data.error || 'Server error during OCR');
         }
         
-        const text = data.text;
-        console.log("Cloud Vision Raw OCR: ", text);
+        // Gemini AI directly returns the extracted invoice number
+        const invoiceNumber = data.invoiceNumber || '';
+        const found = data.found;
+        console.log("Gemini AI Extracted Invoice No:", invoiceNumber, "| Found:", found);
         
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         
-        let cleaned = "";
+        document.getElementById("inputInvoice").value = invoiceNumber;
         
-        // Normalize text: remove spaces around dashes, slashes, and colons
-        let normalizedText = text.replace(/\s*([:\-\/])\s*/g, '$1');
-        
-        // 1. Fuzzy Keyword Search
-        const invoiceRegex = /(?:invo[il1]ce|inv|bill|memo|receipt)\s*(?:no\.?|number|#)?\s*[:\-]?\s*([a-zA-Z0-9\-\/]+)/i;
-        const match = normalizedText.match(invoiceRegex);
-        
-        if (match && match[1] && match[1].length > 3) {
-          cleaned = match[1].toUpperCase();
+        if (found && invoiceNumber.length > 0) {
+          document.getElementById('msg-inv').innerHTML = `✅ Invoice No: <b>${invoiceNumber}</b>`;
         } else {
-          // 2. Pattern Search
-          let potentialMatches = normalizedText.match(/[a-zA-Z0-9]+[\-\/]\d+[\-\/]?\d*/g); 
-          if (potentialMatches && potentialMatches[0].length > 4) { 
-            cleaned = potentialMatches[0].toUpperCase(); 
-          } else { 
-            // 3. Fallback
-            let words = normalizedText.split(/\s+/);
-            let bestWord = "";
-            for (let word of words) {
-              let cleanWord = word.replace(/[^a-zA-Z0-9\-\/]/g, '');
-              let hasLetters = /[a-zA-Z]/.test(cleanWord);
-              let hasNumbers = /[0-9]/.test(cleanWord);
-              
-              if ((hasLetters && hasNumbers) || (hasNumbers && cleanWord.length > 4)) {
-                if (cleanWord.length > bestWord.length) {
-                  bestWord = cleanWord;
-                }
-              }
-            }
-            cleaned = bestWord.toUpperCase(); 
-          }
-        }
-        
-        cleaned = cleaned.replace(/[\-\/]$/, '');
-        document.getElementById("inputInvoice").value = cleaned;
-        
-        if (cleaned && cleaned.length > 1) {
-          document.getElementById('msg-inv').innerHTML = `Invoice: <b>${cleaned}</b>`;
-        } else {
-          document.getElementById('msg-inv').innerHTML = `Type invoice manually.`;
+          document.getElementById('msg-inv').innerHTML = `⚠️ Invoice No not detected. Please type manually.`;
         }
       } catch (err) {
-        console.error("OCR Final Error:", err);
+        console.error("Gemini OCR Error:", err);
         document.getElementById('ocr-loader').style.display = 'none';
         document.getElementById('wrap-inv').style.display = 'block';
         document.getElementById('actions-inv').style.setProperty('display', 'flex', 'important');
         let errMsg = err.message || String(err);
-        Swal.fire('Cloud OCR Failed', 'Error: ' + errMsg + '. Please type manually.', 'warning');
+        Swal.fire('AI OCR Failed', 'Error: ' + errMsg + '. Please type manually.', 'warning');
       }
     }
 
