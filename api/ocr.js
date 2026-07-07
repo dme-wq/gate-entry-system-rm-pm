@@ -27,20 +27,14 @@ export default async function handler(req) {
     const mimeMatch = base64Image.match(/^data:(image\/[a-z]+);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-    // Use Gemini 1.5 Flash (FREE tier) with vision to extract Invoice Number directly
+    // Use Gemini 2.5 Flash with thinking DISABLED for fast, direct extraction
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-    const prompt = `You are an expert invoice data extractor. Look at this invoice image carefully.
+    const prompt = `Look at this invoice image. Find the Invoice Number (labeled as Invoice No., Bill No., Tax Invoice No., Receipt No., or Challan No.).
 
-Your ONLY task: Find and return the Invoice Number (also called Invoice No, Bill No, Tax Invoice No, Receipt No, Challan No, or similar).
-
-Rules:
-- Return ONLY the invoice number value, nothing else
-- No labels, no explanation, no extra words
-- Keep the exact format as shown in the invoice (e.g., "INV/2024/001" or "12345" or "GST/789/24-25")
-- If you cannot find any invoice number, return exactly: NOT_FOUND
-
-Invoice number:`;
+Return ONLY the invoice number value exactly as printed. No extra words, no labels.
+Example valid responses: "351/26-27" or "INV/2024/001" or "12345"
+If not found, return: NOT_FOUND`;
 
     const response = await fetch(geminiUrl, {
       method: 'POST',
@@ -60,10 +54,12 @@ Invoice number:`;
           ]
         }],
         generationConfig: {
-          temperature: 0.1,       // Low temperature = more accurate, less creative
-          maxOutputTokens: 50,    // Invoice number is short, no need for more
-          topP: 0.8,
-          topK: 10
+          temperature: 0.0,
+          maxOutputTokens: 100,
+          // Disable thinking mode - not needed for simple extraction, avoids token cutoff
+          thinkingConfig: {
+            thinkingBudget: 0
+          }
         }
       })
     });
@@ -75,11 +71,28 @@ Invoice number:`;
       throw new Error(errMsg);
     }
 
-    // Extract the text from Gemini's response
-    const invoiceNumber = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    // For gemini-2.5-flash, find the non-thinking text part in response
+    // Thinking parts have "thought: true", actual answer parts don't
+    let invoiceNumber = '';
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    for (const part of parts) {
+      if (!part.thought && part.text) {
+        invoiceNumber = part.text.trim();
+        break;
+      }
+    }
 
-    // Return both the extracted invoice number AND a flag if not found
-    const notFound = invoiceNumber === 'NOT_FOUND' || invoiceNumber === '';
+    // Fallback: just take first part if no non-thought part found
+    if (!invoiceNumber) {
+      invoiceNumber = parts[0]?.text?.trim() || '';
+    }
+
+    // Clean up: remove any leading label like "Invoice number:" if Gemini adds it
+    invoiceNumber = invoiceNumber
+      .replace(/^(invoice\s*(no\.?|number|#)?[\s:\-]*)/i, '')
+      .trim();
+
+    const notFound = invoiceNumber === '' || invoiceNumber.toUpperCase() === 'NOT_FOUND';
 
     return new Response(JSON.stringify({
       invoiceNumber: notFound ? '' : invoiceNumber,
