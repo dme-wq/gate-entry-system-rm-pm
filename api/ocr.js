@@ -28,7 +28,7 @@ export default async function handler(req) {
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
     // Use Gemini 1.5 Flash (FREE tier) with vision to extract Invoice Number directly
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const prompt = `You are an expert invoice data extractor. Look at this invoice image carefully.
 
