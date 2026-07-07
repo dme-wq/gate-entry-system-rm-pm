@@ -399,7 +399,7 @@
           <input type="text" id="inputInvoice" class="modern-input" placeholder="Invoice Number" autocomplete="off">
         </div>
 
-        <div class="d-flex gap-3 mt-4" id="actions-inv" style="display: none !important;">
+        <div class="d-flex gap-3 mt-4" id="actions-inv">
           <button class="btn-primary-elegant btn-secondary-elegant w-50" onclick="prevStep(1)">
             Back
           </button>
@@ -513,7 +513,13 @@
 
     // Step 1: INSTANT PO Voice
     function startVoicePO() {
-      if (!speechRecog) return Swal.fire('Error', 'Voice input not supported.', 'error');
+      if (!speechRecog) {
+        // No speech support - just show dropdown directly
+        document.getElementById('wrap-po').style.display = 'none';
+        document.getElementById('wrap-select-po').style.display = 'block';
+        document.getElementById('msg-po').innerHTML = "Select PO from list below.";
+        return;
+      }
       
       const orb = document.getElementById("orb-1");
       const msg = document.getElementById("msg-po");
@@ -521,18 +527,20 @@
       const wrapSelect = document.getElementById("wrap-select-po");
       const micBtn = document.getElementById("btn-mic-po");
       
-      // Stop ongoing TTS immediately to not delay the mic
       window.speechSynthesis.cancel();
 
       wrap.style.display = 'none';
       wrapSelect.style.display = 'none';
       
-      // Instant visual feedback
       orb.classList.add('listening');
       micBtn.classList.add('active-mic');
-      msg.innerHTML = "Listening instantly...";
+      msg.innerHTML = "Listening... (or tap mic again to skip)";
+
+      // Track whether result was received
+      let voiceResultReceived = false;
 
       speechRecog.onresult = (event) => {
+        voiceResultReceived = true;
         let transcript = event.results[0][0].transcript.trim();
         let cleanText = transcript.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
         
@@ -555,12 +563,12 @@
           msg.innerHTML = `PO Number: <b>${fullPO}</b>`;
           wrap.style.display = 'block';
           wrapSelect.style.display = 'none';
-          // Auto move to next step for maximum speed
           setTimeout(confirmPO, 500); 
         }
       };
       
       speechRecog.onerror = (event) => {
+        voiceResultReceived = true; // treat error as handled
         wrap.style.display = 'none';
         wrapSelect.style.display = 'block';
         msg.innerHTML = `Unclear. Select from list or type.`;
@@ -569,9 +577,20 @@
       speechRecog.onend = () => { 
         orb.classList.remove('listening'); 
         micBtn.classList.remove('active-mic');
+        // If user said nothing — auto-show dropdown
+        if (!voiceResultReceived) {
+          wrap.style.display = 'none';
+          wrapSelect.style.display = 'block';
+          msg.innerHTML = "Select PO from list below.";
+        }
       };
       
-      try { speechRecog.start(); } catch(e) {}
+      try { speechRecog.start(); } catch(e) {
+        // If mic fails, show dropdown
+        wrap.style.display = 'none';
+        wrapSelect.style.display = 'block';
+        msg.innerHTML = "Select PO from list below.";
+      }
     }
 
     function confirmPO() {
