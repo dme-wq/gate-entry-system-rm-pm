@@ -512,7 +512,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxuq_qzr2OyF7ECsoF9FC7bG-BNcsfbmbIoCjI4JEVlH-cvg2LTqy5-zBchRE8utzAf/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLYT2UOWxeuXtnWTTtQq2hd14oCi8hcWoLL5jXbHH89Ahq5a_nzniqioDre5Zojb_d/exec';
 
     let speechRecog = null;
     let videoStream = null;
@@ -562,6 +562,7 @@
         speechRecog.continuous = false;
         speechRecog.interimResults = false;
         speechRecog.lang = 'hi-IN';
+        speechRecog._isRunning = false;
       }
     }
 
@@ -601,7 +602,7 @@
 
     function prevStep(step) {
       stopCamera();
-      if (speechRecog) speechRecog.stop();
+      if (speechRecog) { try { speechRecog.stop(); } catch(e) {} }
       showStep(step);
     }
 
@@ -614,6 +615,20 @@
     function startVoicePO() {
       if (!speechRecog) {
         // No speech support - just show dropdown directly
+        document.getElementById('wrap-po').style.display = 'none';
+        document.getElementById('wrap-select-po').style.display = 'block';
+        document.getElementById('msg-po').innerHTML = "Select PO from list below.<span class='hindi-sub'>नीचे से P.O. नंबर चुनें</span>";
+        return;
+      }
+
+      // ---- Toggle: if already listening, stop and show dropdown ----
+      if (speechRecog._isRunning) {
+        try { speechRecog.stop(); } catch(e) {}
+        speechRecog._isRunning = false;
+        const orb = document.getElementById("orb-1");
+        const micBtn = document.getElementById("btn-mic-po");
+        orb.classList.remove('listening');
+        micBtn.classList.remove('active-mic');
         document.getElementById('wrap-po').style.display = 'none';
         document.getElementById('wrap-select-po').style.display = 'block';
         document.getElementById('msg-po').innerHTML = "Select PO from list below.<span class='hindi-sub'>नीचे से P.O. नंबर चुनें</span>";
@@ -633,13 +648,14 @@
 
       orb.classList.add('listening');
       micBtn.classList.add('active-mic');
-      msg.innerHTML = "Listening... (or tap mic again to skip)<span class='hindi-sub'>बोलें... (छोड़ने के लिए माइक पर दोबारा टैप करें)</span>";
+      msg.innerHTML = "Listening... (or tap mic again to skip)<span class='hindi-sub'>बोलें... (छोड़ने के लिए माइक पर दोबारा टैप करें)</span>";
 
       // Track whether result was received
       let voiceResultReceived = false;
 
       speechRecog.onresult = (event) => {
         voiceResultReceived = true;
+        speechRecog._isRunning = false;
         let transcript = event.results[0][0].transcript.trim();
         let cleanText = transcript.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
 
@@ -668,12 +684,26 @@
 
       speechRecog.onerror = (event) => {
         voiceResultReceived = true; // treat error as handled
-        wrap.style.display = 'none';
-        wrapSelect.style.display = 'block';
-        msg.innerHTML = `Unclear. Select from list or type.<span class='hindi-sub'>समझ नहीं आया — सूची से चुनें या अंक टाइप करें</span>`;
+        speechRecog._isRunning = false;
+        orb.classList.remove('listening');
+        micBtn.classList.remove('active-mic');
+
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          msg.innerHTML = `<span style='color:#ef4444;'>⚠️ Mic permission denied. Please allow mic access and try again.</span><span class='hindi-sub'>माइक की अनुमति दें, फिर दोबारा टैप करें</span>`;
+          wrap.style.display = 'none';
+          wrapSelect.style.display = 'block';
+        } else if (event.error === 'network') {
+          msg.innerHTML = `<span style='color:#ef4444;'>⚠️ Network error. Retrying...</span><span class='hindi-sub'>नेटवर्क त्रुटि — दोबारा कोशिश हो रही है</span>`;
+          setTimeout(startVoicePO, 1500);
+        } else {
+          wrap.style.display = 'none';
+          wrapSelect.style.display = 'block';
+          msg.innerHTML = `Unclear. Select from list or type.<span class='hindi-sub'>समझ नहीं आया — सूची से चुनें या अंक टाइप करें</span>`;
+        }
       };
 
       speechRecog.onend = () => {
+        speechRecog._isRunning = false;
         orb.classList.remove('listening');
         micBtn.classList.remove('active-mic');
         // If user said nothing — auto-show dropdown
@@ -684,7 +714,18 @@
         }
       };
 
-      try { speechRecog.start(); } catch (e) {
+      try {
+        // Re-create recognition instance if previous one is in bad state
+        if (speechRecog._needsReset) {
+          initSpeechRecognition();
+        }
+        speechRecog.start();
+        speechRecog._isRunning = true;
+      } catch (e) {
+        speechRecog._isRunning = false;
+        speechRecog._needsReset = true;
+        orb.classList.remove('listening');
+        micBtn.classList.remove('active-mic');
         // If mic fails, show dropdown
         wrap.style.display = 'none';
         wrapSelect.style.display = 'block';

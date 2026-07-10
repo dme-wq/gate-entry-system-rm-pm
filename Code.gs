@@ -1,14 +1,14 @@
-const SPREADSHEET_ID = "1Wa9VweukM8CIBsirKdO-jyJBudO1icXjjEZk1-nQOj8";
+const SPREADSHEET_ID = "1wbGH0nVpYETRLGfTFkvXgjcRHzDKk9Jtm-weYZI5CtA";
 const DATA_SHEET_NAME = "Data";
 const DROPDOWN_SHEET_NAME = "dropdown";
 const DRIVE_FOLDER_ID = "157w45-NDaGczWvZQCNZiGD8adQ7HtGxC";
 
-// GET: Returns only POs that have NOT yet been used (not in Data tab)
+// GET: Returns ALL POs from dropdown sheet (no filtering based on Data tab)
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-    // Get all available POs from dropdown sheet
+    // Get ALL POs from dropdown sheet column A (no filter)
     const dropSheet = ss.getSheetByName(DROPDOWN_SHEET_NAME);
     let allPOs = [];
     if (dropSheet) {
@@ -16,25 +16,7 @@ function doGet(e) {
       allPOs = data.map(row => row[0]).filter(val => val && val.toString().trim() !== "");
     }
 
-    // Get already-used POs from Data sheet (column C = Vendor PO Number)
-    const dataSheet = ss.getSheetByName(DATA_SHEET_NAME);
-    let usedPOs = new Set();
-    if (dataSheet) {
-      const lastRow = dataSheet.getLastRow();
-      if (lastRow > 1) {
-        const usedData = dataSheet.getRange(2, 3, lastRow - 1, 1).getValues();
-        usedData.forEach(row => {
-          if (row[0] && row[0].toString().trim() !== "") {
-            usedPOs.add(row[0].toString().trim());
-          }
-        });
-      }
-    }
-
-    // Filter: only show POs not yet used
-    const availablePOs = allPOs.filter(po => !usedPOs.has(po.toString().trim()));
-
-    return ContentService.createTextOutput(JSON.stringify({ success: true, vendorPOs: availablePOs }))
+    return ContentService.createTextOutput(JSON.stringify({ success: true, vendorPOs: allPOs }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, message: err.message }))
